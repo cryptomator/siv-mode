@@ -10,6 +10,22 @@
 - Passes official RFC 5297 test vectors
 - Constant time authentication (also on JDK7)
 - Defaults on AES, but supports any block cipher
+- Thread-safe
+
+## Usage
+```java
+private static final SivMode AES_SIV = new SivMode();
+
+public void encrypt() {
+  byte[] encrypted = AES_SIV.encrypt(ctrKey, macKey, "hello world".getBytes());
+  byte[] decrypted = AES_SIV.decrypt(ctrKey, macKey, encrypted);
+}
+
+public void encryptWithAdditionalData() {
+  byte[] encrypted = AES_SIV.encrypt(ctrKey, macKey, "hello world".getBytes(), "additional".getBytes(), "data".getBytes());
+  byte[] decrypted = AES_SIV.decrypt(ctrKey, macKey, encrypted, "additional".getBytes(), "data".getBytes());
+}
+```
 
 ## Dependencies:
 - JDK 7+
@@ -17,21 +33,21 @@
 
 ## Maven integration
 
-```
-  <repositories>
-    <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-    </repository>
-  </repositories>
-  
-  <dependencies>
-    <dependency>
-      <groupId>org.cryptomator</groupId>
-      <artifactId>siv-mode</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-  </dependencies>
+```xml
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>org.cryptomator</groupId>
+    <artifactId>siv-mode</artifactId>
+    <version>1.0.1</version>
+  </dependency>
+</dependencies>
 ```
 
 ## License
