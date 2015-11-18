@@ -11,6 +11,8 @@ package org.cryptomator.siv;
 import java.security.InvalidKeyException;
 
 import javax.crypto.AEADBadTagException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -227,6 +229,17 @@ public class SivModeTest {
 				(byte) 0xfd, (byte) 0x5c, (byte) 0x0d};
 
 		Assert.assertArrayEquals(expected, result);
+	}
 
+	@Test
+	public void testEncryptionAndDecryptionUsingJavaxCryptoApi() throws AEADBadTagException {
+		final byte[] dummyKey = new byte[16];
+		final SecretKey ctrKey = new SecretKeySpec(dummyKey, "AES");
+		final SecretKey macKey = new SecretKeySpec(dummyKey, "AES");
+		final SivMode sivMode = new SivMode();
+		final byte[] cleartext = "hello world".getBytes();
+		final byte[] ciphertext = sivMode.encrypt(ctrKey, macKey, cleartext);
+		final byte[] decrypted = sivMode.decrypt(ctrKey, macKey, ciphertext);
+		Assert.assertArrayEquals(cleartext, decrypted);
 	}
 }
