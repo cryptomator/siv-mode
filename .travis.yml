@@ -4,7 +4,11 @@ sudo: false
 
 jdk:
   - oraclejdk7
+  - oraclejdk8
 
 env:
   global:
     - secure: "v6SSHZTfZNVjIPS/Hyn+49UsUVaEKkempeIRb7N/BfpRw4IHod6ipiOGGpz50zaZMYNtOkndAqvJXkWD/w2RfHNznFr6VB+KnGnA2o/KVcHR07s3oNaMfOy3MUFJzGLD1pNgdmYfoYkEnKFlyZtI8Ijz8GNOs7MCSDapDGnoFwtBFqpSMMQ26iqiURxXhPYn3IUCfEIv9nHhn3MkoGEP1CQc3ROH+0XYwJQZ79XrbMfCvxFqySCzqcZki1sAPKiZ5qnQzlF+TEbkCckhUkEWSn1+YqBdR7aBJCYx5ReKA/fqS89xdfiWqfLIE5/H/ZRb27Y5AwxJuSorjWQRIyL8bAOBsXGAdkrmyPu9c/iTxuswMmazAxIMtZY4Qicg0zoCM2yGgueoebaW784rkxf3kCnkY2NHe3JHlNqa5ks+y/l/LMnI8jMFaaiNd+Sgdq3G3f6YOL+wjX7OTHBAcmPgwWozaw29Gr2Wfde0Paa3ASYIev+vEMs48BiZVlss55aUvs4lyUL2i37yH1OyJduEpgarojxLkCCuw7LaYxT4KlJT1gxfxonpgZsD9Xp8kCvE0HSQ5uMZmfJrVNGN0h/otDX0bl3IoisKkeZ9MPzkfEgtoBupNGh4VzOsbmdxTk970bBUgMy3CPPL0sNFfaJtxzus+ypzCZOiJ4i1gRGpzpM="
+
+after_success:
+  - mvn clean test jacoco:report coveralls:report

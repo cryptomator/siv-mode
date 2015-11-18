@@ -1,6 +1,7 @@
 # RFC 5297 SIV mode of operation in Java
 
 [![Build Status](https://travis-ci.org/cryptomator/siv-mode.svg?branch=master)](https://travis-ci.org/cryptomator/siv-mode)
+[![Coverage Status](https://coveralls.io/repos/cryptomator/siv-mode/badge.svg?branch=master&service=github)](https://coveralls.io/github/cryptomator/siv-mode?branch=master)
 [![Release](https://img.shields.io/github/release/org.cryptomator/siv-mode.svg?label=maven)](https://jitpack.io/#org.cryptomator/siv-mode)
 
 
