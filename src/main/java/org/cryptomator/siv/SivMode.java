@@ -9,7 +9,6 @@ package org.cryptomator.siv;
  ******************************************************************************/
 
 import java.nio.ByteBuffer;
-import java.security.MessageDigest;
 import java.util.Arrays;
 
 import javax.crypto.AEADBadTagException;
@@ -200,7 +199,14 @@ public final class SivMode {
 
 		final byte[] control = s2v(macKey, plaintext, additionalData);
 
-		if (MessageDigest.isEqual(control, iv)) {
+		// time-constant comparison (taken from MessageDigest.isEqual in JDK8)
+		assert iv.length == control.length;
+		int diff = 0;
+		for (int i = 0; i < iv.length; i++) {
+			diff |= iv[i] ^ control[i];
+		}
+
+		if (diff == 0) {
 			return plaintext;
 		} else {
 			throw new AEADBadTagException("authentication in SIV decryption failed");
