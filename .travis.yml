@@ -12,3 +12,13 @@ env:
 
 after_success:
   - mvn clean test jacoco:report coveralls:report
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "dRijSk/sHobAcr+0Q6MvEbTsz5v3Vy4kCLjX+FME5qJozrrDvxsFBd99zUW43ULrgIOajqEKGOH2FS8eI6N6eZoFECXfp9SDf3xCfFgMn2J3o47lUmhbU1XO8oiQ4o2kF28PyN2h/ldPDgRtMzO8z/dlFpZUqDZSg5kij9XFEal1e+EXzXsnDjUABPPXU0ScO+5x+k0ficSCUlxyAIO0hAzBbQuMxjORA0DI0CQ/Y4+tjtHPcvlWnsjZ45+8JBHqKCp8cj8ptumNKMVnfIVEVv5o/cKunSrQEG4I+jwzGmvpTgYv2jpAVcvlQjVMsvgnS81IIB59/48MngzYT8h6YMVQCSYmQ7drTTGzzGXHf852BCNYV1Zxq81Sbk9MxGDJHFyF7x1DwQP0tavcETo5dcLJs6ITIfSoTie+wozp4j+lNRGUlmKhGkfJYTxI9AUyAtbkhI+VNXaK6UK3j7B6g3FF44BXgR2dzV1xIsoxS0yCXfT+gMM1dVMUxy3UNSztMtcG1F+h9BBgrlHSYNofFBZkSt2WC2QwYT3IbZ+2FXAqkacf3azKkzP/kbTlJYsG8qVAwVHFIwuGauWKqGV699WcQFAfxh7trWv6FpdhykAAtgST68FxDrBEsKX7/U3v59pqs1Ri0mrQ5MeHwssSA2tf+7RteFTpDFl9uC67IFM="
+  file: target/siv-mode-$TRAVIS_TAG.jar
+  skip_cleanup: true
+  on:
+    repo: cryptomator/siv-mode
+    tags: true
