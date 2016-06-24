@@ -34,7 +34,7 @@ public final class SivMode {
 	private final BlockCipherFactory cipherFactory;
 
 	/**
-	 * Creates an AES-SIV instance using BouncyCastle's {@link AESFastEngine}, which should normally be the best choice.<br/>
+	 * Creates an AES-SIV instance using BouncyCastle's {@link AESFastEngine}, which should normally be the best choice.<br>
 	 * 
 	 * For embedded systems, you might want to consider using {@link #SivMode(BlockCipherFactory)} with {@link AESLightEngine} instead.
 	 * 
@@ -93,7 +93,7 @@ public final class SivMode {
 	}
 
 	/**
-	 * Encrypts plaintext using SIV mode. A block cipher defined by the constructor is being used.<br/>
+	 * Encrypts plaintext using SIV mode. A block cipher defined by the constructor is being used.<br>
 	 * This method leaves the two given keys untouched, the calling function needs to makes sure, key bytes are destroyed when finished.
 	 * 
 	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
@@ -161,7 +161,7 @@ public final class SivMode {
 	}
 
 	/**
-	 * Decrypts ciphertext using SIV mode. A block cipher defined by the constructor is being used.<br/>
+	 * Decrypts ciphertext using SIV mode. A block cipher defined by the constructor is being used.<br>
 	 * This method leaves the two given keys untouched, the calling function needs to makes sure, key bytes are destroyed when finished.
 	 * 
 	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
