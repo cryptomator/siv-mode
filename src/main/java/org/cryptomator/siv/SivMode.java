@@ -14,14 +14,14 @@ import java.util.Arrays;
 import javax.crypto.AEADBadTagException;
 import javax.crypto.SecretKey;
 
-import org.bouncycastle.crypto.BlockCipher;
-import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.Mac;
-import org.bouncycastle.crypto.engines.AESFastEngine;
-import org.bouncycastle.crypto.engines.AESLightEngine;
-import org.bouncycastle.crypto.macs.CMac;
-import org.bouncycastle.crypto.paddings.ISO7816d4Padding;
-import org.bouncycastle.crypto.params.KeyParameter;
+import org.spongycastle.crypto.BlockCipher;
+import org.spongycastle.crypto.CipherParameters;
+import org.spongycastle.crypto.Mac;
+import org.spongycastle.crypto.engines.AESFastEngine;
+import org.spongycastle.crypto.engines.AESLightEngine;
+import org.spongycastle.crypto.macs.CMac;
+import org.spongycastle.crypto.paddings.ISO7816d4Padding;
+import org.spongycastle.crypto.params.KeyParameter;
 
 /**
  * Implements the RFC 5297 SIV mode.
