@@ -26,6 +26,7 @@ deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script: '[ -n "${TRAVIS_TAG}" ] && mvn clean versions:set -DnewVersion=${TRAVIS_TAG} && mvn deploy -P release --settings settings.xml || mvn deploy -P release --settings settings.xml'
+  script: mvn versions:set -DnewVersion=${TRAVIS_TAG} && mvn deploy -P release --settings settings.xml
   on:
     repo: cryptomator/siv-mode
+    tags: true
