@@ -1,6 +1,8 @@
 language: java
 sudo: false
 jdk:
+- oraclejdk8
+- oraclejdk7
 - openjdk7
 env:
   global:
@@ -12,11 +14,12 @@ before_install:
 - gpg --import 34C80F11.gpg
 script: mvn clean install
 after_success:
-- mvn clean test jacoco:report coveralls:report
+- mvn clean test jacoco:report coveralls:report && bash <(curl -s https://codecov.io/bash)
 deploy:
   provider: script
   skip_cleanup: true
-  script: mvn versions:set -DnewVersion=${TRAVIS_TAG} && mvn deploy -DskipTests -P release --settings settings.xml
+  script: mvn clean versions:set -DnewVersion=${TRAVIS_TAG} deploy -DskipTests -P release --settings settings.xml
   on:
     repo: cryptomator/siv-mode
     tags: true
+    jdk: openjdk7
