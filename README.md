@@ -5,7 +5,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/org.cryptomator/siv-mode.svg?maxAge=86400)](https://repo1.maven.org/maven2/org/cryptomator/siv-mode/)
 
 ## Features
-- Depends only on BouncyCastle
+- No dependencies (required BouncyCastle classes are repackaged)
 - Passes official RFC 5297 test vectors
 - Constant time authentication
 - Defaults on AES, but supports any block cipher
@@ -26,10 +26,6 @@ public void encryptWithAdditionalData() {
 }
 ```
 
-## Dependencies:
-- JDK 7+
-- SpongyCastle (BouncyCastle fork)
-
 ## Maven integration
 
 ```xml
@@ -37,7 +33,7 @@ public void encryptWithAdditionalData() {
   <dependency>
     <groupId>org.cryptomator</groupId>
     <artifactId>siv-mode</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.5</version>
   </dependency>
 </dependencies>
 ```
