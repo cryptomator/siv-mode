@@ -33,7 +33,7 @@ public void encryptWithAdditionalData() {
   <dependency>
     <groupId>org.cryptomator</groupId>
     <artifactId>siv-mode</artifactId>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
   </dependency>
 </dependencies>
 ```
