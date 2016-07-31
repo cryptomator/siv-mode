@@ -19,7 +19,7 @@ deploy:
   script: mvn clean deploy -DskipTests -P release --settings settings.xml
   on:
     repo: cryptomator/siv-mode
-    branch: develop
+    branch: master
     condition: $TRAVIS_TAG = ''
     jdk: openjdk7
 - provider: script # RELEASES
