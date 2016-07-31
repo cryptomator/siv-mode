@@ -2,7 +2,6 @@ language: java
 sudo: false
 jdk:
 - oraclejdk8
-- oraclejdk7
 - openjdk7
 env:
   global:
@@ -10,14 +9,20 @@ env:
   - secure: gZBB5FXkBFbMwXP8CzREmg2GShlS1rE+OnrOAGoevrJdrCFUiw7GW1NYI0no31hUV0wy3vaqLOdvOoITyNm75xc1oRKaAN31CwDhhDCrJwyT/yJOWj/HLwxZIq4icIDrD5vKsUiyXVH/XXXmqvF76TlY1KdIBFicDtWWYLlz2XijoKInQpSbMa4ntpETb4daXTcz7bcjJ0N1hXTSlWnuxXRn4jdLKyn0ksPQ+8HxNKfCqkGumI1H0jB60eaKNGsG1dZwKrY5HnFzmYptPaYVlNutO17wjvKM5CJ8XdSiojymaMrgT6Tl6UzUnE5yfUp3QsWGaypYDX32Nt4qOS304/pmDA3uy+pUtoPhPWgaLf55KAKqsWrRsP32cqeBRpXrWEvP9V/9wYa7cchAAD5wApaJVQSbJVX8WzeMw+DgL8LQlg8y1KHh4POIY6Z5IZnVdKr9eElB2Ii2wTHJHaJZWK35PsXezAnOfsrkjm4PxtuhnogaH/g/M1l6+Zwdc5lptRlixRnOzI6W6mKux63hm9jW44kTWcVsG3J4cyjDno1uLDdJ6ra9qvnAgN398V3MUWZXPVmhOzM2l8HV0fJqGc57FPLa5Aeo3k10jqWTtA7hYcbk00GEqeMvD2ZeOdmTVGi/N25ZHNipNs3Z3abEhnBVAUq3eWBCGik2eeNIDm0= # MAVEN_GPG_PASSPHRASE
   - secure: jJWZyFQHHjDoP9248Gc2lXrfvMZX2z/tCsEuCY/U1O+xheCyKjw/tIPvZamDJo88Zqr1pJ4m5cEvriuSRFF8s8+huvXN0v5dgRnmcZ+0+Pl+VnVTS/+MXsxRZBYwOsdk+2h7bF8eXZh0lV11JSNbo5e5fCzVWHNL5C5/Ko9uVdWa/Rqqoe8KRGAWbqSvvHCh2z37E8JvuLFEzWHOo4+BVlhWc4hydnnVU2ZmU4M1Az7ElLkUQLWIEip6CMV1r68ZiKLS2zhju8n3M5YM9iCAGFw1rgQX0p0B1eGMwmCNzsKR5vRAuHDrSZSWiaKTZucx+6y3kT0G1RBJ0r5VoyBXvB87lEXulhGx+dBmNGwcB17G8qnTFgnyNMLSmSKDmAvcZHt5eMs7yv1wXt3+aSLnAnCEv3QQ8wFr+aN3JWvYVfKcdTcxg/3hinui6rETU6I7hpS/Je5QyNd9bNmP7un6opBPS9plNMeav5hLmuFupAOpalxkhkZan8s8t++B6a2p0InchPp242T7E4BWfXaJHO9geaCZC/v3tMF2DhNwYRngZqo4v4gIOs+XVXHb9ZnIqmJZCz79FSL3q/M727aGURFShPZ2VpqAk7dIMNf0HvRqLa+Gn/SCWF1L7VBNqdhwZUES8WiBhY4d7nbezGc61S99JAgr9k8cGQAKk/m88I0= # MAVEN_OSSRH_USERNAME
   - secure: CReylGttPV4AsNNvJhdrP4Hqc+k5k8n7rc8+ql7NX1aM9D0UkJzxBKvWBABRrmv8unaw04EWMO6fcB0TsajTU3aDt2nW6AXhhEKLlmiIKLzeMOQlixv8HeOLM1l7M5QbYb1F3grMA32nmw/V8MNu7AUO3x0s49I6HYEFelhDY+0dE5v3hgXnbHPdpDk+gt91t/wHUqnzqCTccfCz210X/VlPEjoV4qVg0OiVBBNLYcPBg7LBkOdv8X7ginnrUJM2dDzKmlUDfWMRlkwAoTcFjISsrEdGbcH2pOes1nq6G8yVeMhjeN5bjywCWD0X5hsyF3y1kxC3FXzVge+xbk1aNHoDjSrTw7RVIsLK4BUYYC9BrC2/3555SYAWRN4FTnIXOyyM0Vu8fr/C+9C9QIJfFl40rwsB359GMGwjF4eTIFlrKqC4AUXCk0iNYXJyVcKoHdLoyRMn3fdZzeP5fY2F1SujGLIoEOyRmdZX+WC+obdN6jO0FccKtPWfeSoUwVkI2NOLTZ1G+sykd2A109WJIYjopc11g/HgGOks8AHiWLLFrt3Fy93wLRvfnwkIkSSMYpN6xp6Mnay53oqm7UzTmYuXI7D6IfoY63suQZHC1XYwxjfNlUBIZ+CgSsBaisStFUs8lr0+HUbFZqUE3Iv2KctZVMlfRBvFASTCWVRZo8c= # MAVEN_OSSRH_PASSWORD
-before_install:
-- gpg --import 34C80F11.gpg
 script: mvn clean install
 after_success:
 - mvn clean test jacoco:report coveralls:report && bash <(curl -s https://codecov.io/bash)
+before_deploy:
+- gpg --import 34C80F11.gpg
 deploy:
-  provider: script
-  skip_cleanup: true
+- provider: script # SNAPSHOTS
+  script: mvn clean deploy -DskipTests -P release --settings settings.xml
+  on:
+    repo: cryptomator/siv-mode
+    branch: develop
+    condition: $TRAVIS_TAG = ''
+    jdk: openjdk7
+- provider: script # RELEASES
   script: mvn clean versions:set -DnewVersion=${TRAVIS_TAG} deploy -DskipTests -P release --settings settings.xml
   on:
     repo: cryptomator/siv-mode

@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cryptomator</groupId>
 	<artifactId>siv-mode</artifactId>
-	<version>1.0.6</version>
+	<version>1.0.7-SNAPSHOT</version>
 
 	<name>SIV Mode</name>
 	<description>RFC 5297 SIV mode: deterministic authenticated encryption</description>
@@ -42,6 +42,8 @@
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
 			<version>1.54</version>
+			<!-- see maven-shade-plugin; we don't want this as a transitive dependency in other projects -->
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
