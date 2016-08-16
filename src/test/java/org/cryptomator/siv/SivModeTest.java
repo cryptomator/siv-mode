@@ -11,6 +11,7 @@ package org.cryptomator.siv;
 import java.security.InvalidKeyException;
 
 import javax.crypto.AEADBadTagException;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -51,7 +52,7 @@ public class SivModeTest {
 	}
 
 	@Test
-	public void testSivEncrypt() throws InvalidKeyException {
+	public void testSivEncrypt() {
 		final byte[] macKey = {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, (byte) 0xfc, //
 				(byte) 0xfb, (byte) 0xfa, (byte) 0xf9, (byte) 0xf8, //
 				(byte) 0xf7, (byte) 0xf6, (byte) 0xf5, (byte) 0xf4, //
@@ -88,7 +89,7 @@ public class SivModeTest {
 	}
 
 	@Test
-	public void testSivDecrypt() throws AEADBadTagException, InvalidKeyException {
+	public void testSivDecrypt() throws AEADBadTagException, IllegalBlockSizeException {
 		final byte[] macKey = {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, (byte) 0xfc, //
 				(byte) 0xfb, (byte) 0xfa, (byte) 0xf9, (byte) 0xf8, //
 				(byte) 0xf7, (byte) 0xf6, (byte) 0xf5, (byte) 0xf4, //
@@ -125,7 +126,7 @@ public class SivModeTest {
 	}
 
 	@Test(expected = AEADBadTagException.class)
-	public void testSivDecryptWithInvalidKey() throws AEADBadTagException, InvalidKeyException {
+	public void testSivDecryptWithInvalidKey() throws AEADBadTagException, IllegalBlockSizeException {
 		final byte[] macKey = {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, (byte) 0xfc, //
 				(byte) 0xfb, (byte) 0xfa, (byte) 0xf9, (byte) 0xf8, //
 				(byte) 0xf7, (byte) 0xf6, (byte) 0xf5, (byte) 0xf4, //
@@ -152,13 +153,27 @@ public class SivModeTest {
 				(byte) 0xda, (byte) 0xef, (byte) 0x7f, (byte) 0x6a, //
 				(byte) 0xfe, (byte) 0x5c};
 
-		final byte[] expected = {(byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, //
-				(byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88, //
-				(byte) 0x99, (byte) 0xaa, (byte) 0xbb, (byte) 0xcc, //
-				(byte) 0xdd, (byte) 0xee};
+		new SivMode().decrypt(aesKey, macKey, ciphertext, ad);
+	}
 
-		final byte[] result = new SivMode().decrypt(aesKey, macKey, ciphertext, ad);
-		Assert.assertArrayEquals(expected, result);
+	@Test(expected = IllegalBlockSizeException.class)
+	public void testSivDecryptWithInvalidCiphertext() throws AEADBadTagException, IllegalBlockSizeException {
+		final byte[] macKey = {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, (byte) 0xfc, //
+				(byte) 0xfb, (byte) 0xfa, (byte) 0xf9, (byte) 0xf8, //
+				(byte) 0xf7, (byte) 0xf6, (byte) 0xf5, (byte) 0xf4, //
+				(byte) 0xf3, (byte) 0xf2, (byte) 0xf1, (byte) 0xf0};
+
+		final byte[] aesKey = {(byte) 0xf0, (byte) 0xf1, (byte) 0xf2, (byte) 0xf3, //
+				(byte) 0xf4, (byte) 0xf5, (byte) 0xf6, (byte) 0xf7, //
+				(byte) 0xf8, (byte) 0xf9, (byte) 0xfa, (byte) 0xfb, //
+				(byte) 0xfc, (byte) 0xfd, (byte) 0xfe, (byte) 0x00};
+
+		final byte[] ciphertext = {(byte) 0x85, (byte) 0x63, (byte) 0x2d, (byte) 0x07, //
+				(byte) 0xc6, (byte) 0xe8, (byte) 0xf3, (byte) 0x7f, //
+				(byte) 0x95, (byte) 0x0a, (byte) 0xcd, (byte) 0x32, //
+				(byte) 0x0a, (byte) 0x2e, (byte) 0xcc};
+
+		new SivMode().decrypt(aesKey, macKey, ciphertext);
 	}
 
 	/**
@@ -232,7 +247,7 @@ public class SivModeTest {
 	}
 
 	@Test
-	public void testEncryptionAndDecryptionUsingJavaxCryptoApi() throws AEADBadTagException {
+	public void testEncryptionAndDecryptionUsingJavaxCryptoApi() throws AEADBadTagException, IllegalBlockSizeException {
 		final byte[] dummyKey = new byte[16];
 		final SecretKey ctrKey = new SecretKeySpec(dummyKey, "AES");
 		final SecretKey macKey = new SecretKeySpec(dummyKey, "AES");

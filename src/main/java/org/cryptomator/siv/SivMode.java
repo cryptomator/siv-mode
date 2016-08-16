@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import javax.crypto.AEADBadTagException;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 
 import org.bouncycastle.crypto.BlockCipher;
@@ -143,10 +144,11 @@ public final class SivMode {
 	 * @param ciphertext Your cipehrtext, which shall be decrypted.
 	 * @param additionalData Optional additional data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
-	 * @throws IllegalArgumentException if keys are invalid or {@link SecretKey#getEncoded()} is not supported.
-	 * @throws AEADBadTagException if the authentication failed, e.g. because ciphertext and/or additionalData are corrupted.
+	 * @throws IllegalArgumentException If keys are invalid or {@link SecretKey#getEncoded()} is not supported.
+	 * @throws AEADBadTagException If the authentication failed, e.g. because ciphertext and/or additionalData are corrupted.
+	 * @throws IllegalBlockSizeException If the provided ciphertext is of invalid length.
 	 */
-	public byte[] decrypt(SecretKey ctrKey, SecretKey macKey, byte[] ciphertext, byte[]... additionalData) throws AEADBadTagException {
+	public byte[] decrypt(SecretKey ctrKey, SecretKey macKey, byte[] ciphertext, byte[]... additionalData) throws AEADBadTagException, IllegalBlockSizeException {
 		final byte[] ctrKeyBytes = ctrKey.getEncoded();
 		final byte[] macKeyBytes = macKey.getEncoded();
 		if (ctrKeyBytes == null || macKeyBytes == null) {
@@ -169,12 +171,16 @@ public final class SivMode {
 	 * @param ciphertext Your ciphertext, which shall be encrypted.
 	 * @param additionalData Optional additional data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
-	 * @throws IllegalArgumentException if the either of the two keys is of invalid length for the used {@link BlockCipher}.
-	 * @throws AEADBadTagException if the authentication failed, e.g. because ciphertext and/or additionalData are corrupted.
+	 * @throws IllegalArgumentException If the either of the two keys is of invalid length for the used {@link BlockCipher}.
+	 * @throws AEADBadTagException If the authentication failed, e.g. because ciphertext and/or additionalData are corrupted.
+	 * @throws IllegalBlockSizeException If the provided ciphertext is of invalid length.
 	 */
-	public byte[] decrypt(byte[] ctrKey, byte[] macKey, byte[] ciphertext, byte[]... additionalData) throws AEADBadTagException {
-		final byte[] iv = Arrays.copyOf(ciphertext, 16);
+	public byte[] decrypt(byte[] ctrKey, byte[] macKey, byte[] ciphertext, byte[]... additionalData) throws AEADBadTagException, IllegalBlockSizeException {
+		if (ciphertext.length < 16) {
+			throw new IllegalBlockSizeException("Input length must be greater than or equal 16.");
+		}
 
+		final byte[] iv = Arrays.copyOf(ciphertext, 16);
 		final byte[] actualCiphertext = Arrays.copyOfRange(ciphertext, 16, ciphertext.length);
 		final int numBlocks = (actualCiphertext.length + 15) / 16;
 
