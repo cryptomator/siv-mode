@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/cryptomator/siv-mode.svg?branch=master)](https://travis-ci.org/cryptomator/siv-mode)
 [![Coverage Status](https://coveralls.io/repos/cryptomator/siv-mode/badge.svg?branch=master&service=github)](https://coveralls.io/github/cryptomator/siv-mode?branch=master)
 [![Maven Central](https://img.shields.io/maven-central/v/org.cryptomator/siv-mode.svg?maxAge=86400)](https://repo1.maven.org/maven2/org/cryptomator/siv-mode/)
+[![Javadocs](http://www.javadoc.io/badge/org.cryptomator/siv-mode.svg)](http://www.javadoc.io/doc/org.cryptomator/siv-mode)
 
 ## Features
 - No dependencies (required BouncyCastle classes are repackaged)
