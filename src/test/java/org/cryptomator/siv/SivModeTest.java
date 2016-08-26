@@ -15,13 +15,81 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.bouncycastle.crypto.BlockCipher;
+import org.cryptomator.siv.SivMode.BlockCipherFactory;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * Official RFC 5297 test vector taken from https://tools.ietf.org/html/rfc5297#appendix-A.1
  */
 public class SivModeTest {
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testEncryptWithInvalidKey1() {
+		SecretKey key1 = Mockito.mock(SecretKey.class);
+		Mockito.when(key1.getEncoded()).thenReturn(null);
+		SecretKey key2 = Mockito.mock(SecretKey.class);
+		Mockito.when(key2.getEncoded()).thenReturn(new byte[16]);
+
+		new SivMode().encrypt(key1, key2, new byte[10]);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testEncryptWithInvalidKey2() {
+		SecretKey key1 = Mockito.mock(SecretKey.class);
+		Mockito.when(key1.getEncoded()).thenReturn(new byte[16]);
+		SecretKey key2 = Mockito.mock(SecretKey.class);
+		Mockito.when(key2.getEncoded()).thenReturn(null);
+
+		new SivMode().encrypt(key1, key2, new byte[10]);
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void testEncryptWithInvalidCipher() {
+		final byte[] dummyKey = new byte[16];
+		final SecretKey ctrKey = new SecretKeySpec(dummyKey, "AES");
+		final SecretKey macKey = new SecretKeySpec(dummyKey, "AES");
+		final SivMode sivMode = new SivMode(new BlockCipherFactory() {
+
+			@Override
+			public BlockCipher create() {
+				return null; // will cause exceptions
+			}
+		});
+
+		sivMode.encrypt(ctrKey, macKey, new byte[10]);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testDecryptWithInvalidKey1() throws AEADBadTagException, IllegalBlockSizeException {
+		SecretKey key1 = Mockito.mock(SecretKey.class);
+		Mockito.when(key1.getEncoded()).thenReturn(null);
+		SecretKey key2 = Mockito.mock(SecretKey.class);
+		Mockito.when(key2.getEncoded()).thenReturn(new byte[16]);
+
+		new SivMode().decrypt(key1, key2, new byte[16]);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testDecryptWithInvalidKey2() throws AEADBadTagException, IllegalBlockSizeException {
+		SecretKey key1 = Mockito.mock(SecretKey.class);
+		Mockito.when(key1.getEncoded()).thenReturn(new byte[16]);
+		SecretKey key2 = Mockito.mock(SecretKey.class);
+		Mockito.when(key2.getEncoded()).thenReturn(null);
+
+		new SivMode().decrypt(key1, key2, new byte[16]);
+	}
+
+	@Test(expected = IllegalBlockSizeException.class)
+	public void testDecryptWithInvalidBlockSize() throws AEADBadTagException, IllegalBlockSizeException {
+		final byte[] dummyKey = new byte[16];
+		final SecretKey ctrKey = new SecretKeySpec(dummyKey, "AES");
+		final SecretKey macKey = new SecretKeySpec(dummyKey, "AES");
+
+		new SivMode().decrypt(ctrKey, macKey, new byte[10]);
+	}
 
 	@Test
 	public void testS2v() {

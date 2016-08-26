@@ -283,10 +283,7 @@ public final class SivMode {
 	}
 
 	private static byte[] xor(byte[] in1, byte[] in2) {
-		if (in1 == null || in2 == null || in1.length > in2.length) {
-			throw new IllegalArgumentException("Length of first input must be <= length of second input.");
-		}
-
+		assert in1.length <= in2.length : "Length of first input must be <= length of second input.";
 		final byte[] result = new byte[in1.length];
 		for (int i = 0; i < result.length; i++) {
 			result[i] = (byte) (in1[i] ^ in2[i]);
@@ -295,10 +292,7 @@ public final class SivMode {
 	}
 
 	private static byte[] xorend(byte[] in1, byte[] in2) {
-		if (in1 == null || in2 == null || in1.length < in2.length) {
-			throw new IllegalArgumentException("Length of first input must be >= length of second input.");
-		}
-
+		assert in1.length >= in2.length : "Length of first input must be >= length of second input.";
 		final byte[] result = Arrays.copyOf(in1, in1.length);
 		final int diff = in1.length - in2.length;
 		for (int i = 0; i < in2.length; i++) {
