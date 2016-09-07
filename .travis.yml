@@ -13,7 +13,7 @@ env:
 script:
 - mvn dependency-check:check -Pdependency-check
 - mvn clean test jacoco:report verify -Pcoverage
-- "[ ${TRAVIS_JDK_VERSION} == 'openjdk7' ] && bash <(curl -s https://codecov.io/bash)"
+- "if [[ ${TRAVIS_JDK_VERSION} == 'openjdk7' ]]; then bash <(curl -s https://codecov.io/bash); fi"
 addons:
   coverity_scan:
     project:
