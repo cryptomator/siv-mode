@@ -14,6 +14,11 @@ script:
 - mvn dependency-check:check -Pdependency-check
 - mvn clean test jacoco:report verify -Pcoverage
 - "if [[ ${TRAVIS_JDK_VERSION} == 'openjdk7' ]]; then bash <(curl -s https://codecov.io/bash); fi"
+before_cache:
+- mvn -Prelease clean test -DskipTests
+cache:
+  directories:
+  - $HOME/.m2
 addons:
   coverity_scan:
     project:
@@ -22,19 +27,19 @@ addons:
     notification_email: sebastian.stenzel@cryptomator.org
     build_command_prepend: "mvn clean"
     build_command: "mvn -DskipTests=true compile"
-    branch_pattern: master
+    branch_pattern: master-SKIP
 before_deploy:
 - gpg --import 34C80F11.gpg
 deploy:
 - provider: script # SNAPSHOTS
-  script: mvn clean deploy -DskipTests -P release --settings settings.xml
+  script: mvn clean deploy -DskipTests -Prelease --settings settings.xml
   on:
     repo: cryptomator/siv-mode
     branch: master
     condition: $TRAVIS_TAG = ''
     jdk: openjdk7
 - provider: script # RELEASES
-  script: mvn clean versions:set -DnewVersion=${TRAVIS_TAG} deploy -DskipTests -P release --settings settings.xml
+  script: mvn clean versions:set -DnewVersion=${TRAVIS_TAG} deploy -DskipTests -Prelease --settings settings.xml
   on:
     repo: cryptomator/siv-mode
     tags: true
