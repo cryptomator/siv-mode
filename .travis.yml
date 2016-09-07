@@ -27,7 +27,7 @@ addons:
     notification_email: sebastian.stenzel@cryptomator.org
     build_command_prepend: "mvn clean"
     build_command: "mvn -DskipTests=true compile"
-    branch_pattern: master-SKIP
+    branch_pattern: master
 before_deploy:
 - gpg --import 34C80F11.gpg
 deploy:
