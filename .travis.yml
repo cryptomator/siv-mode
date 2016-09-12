@@ -37,6 +37,7 @@ before_deploy:
 deploy:
 - provider: script # SNAPSHOTS
   script: mvn clean deploy -DskipTests -Prelease --settings settings.xml
+  skip_cleanup: true
   on:
     repo: cryptomator/siv-mode
     branch: master
@@ -44,6 +45,7 @@ deploy:
     jdk: openjdk7
 - provider: script # RELEASES
   script: mvn clean versions:set -DnewVersion=${TRAVIS_TAG} deploy -DskipTests -Prelease --settings settings.xml
+  skip_cleanup: true
   on:
     repo: cryptomator/siv-mode
     tags: true
