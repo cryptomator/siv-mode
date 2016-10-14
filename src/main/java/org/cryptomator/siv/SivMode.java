@@ -107,6 +107,11 @@ public final class SivMode {
 	public byte[] encrypt(byte[] ctrKey, byte[] macKey, byte[] plaintext, byte[]... additionalData) {
 		final byte[] iv = s2v(macKey, plaintext, additionalData);
 
+		// Check if plaintext length will cause overflows
+		if (plaintext.length > (Integer.MAX_VALUE - 16)) {
+			throw new IllegalArgumentException("Plaintext is too long");
+		}
+
 		final int numBlocks = (plaintext.length + 15) / 16;
 
 		// clear out the 31st and 63rd (rightmost) bit:
@@ -182,6 +187,8 @@ public final class SivMode {
 
 		final byte[] iv = Arrays.copyOf(ciphertext, 16);
 		final byte[] actualCiphertext = Arrays.copyOfRange(ciphertext, 16, ciphertext.length);
+
+		// will not overflow because actualCiphertext.length == (ciphertext.length - 16)
 		final int numBlocks = (actualCiphertext.length + 15) / 16;
 
 		// clear out the 31st and 63rd (rightmost) bit:
