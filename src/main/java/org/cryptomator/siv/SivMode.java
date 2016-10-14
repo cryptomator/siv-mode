@@ -277,7 +277,8 @@ public final class SivMode {
 		/*
 		 * NOTE: This construction is an attempt at a constant-time implementation.
 		 */
-		ret[in.length - 1] ^= (xor >>> ((1 - carry) << 3));
+		int mask = (-carry) & 0xff;
+		ret[in.length - 1] ^= xor & mask;
 
 		return ret;
 	}
