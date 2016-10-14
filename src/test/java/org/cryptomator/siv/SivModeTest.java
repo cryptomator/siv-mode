@@ -325,4 +325,166 @@ public class SivModeTest {
 		final byte[] decrypted = sivMode.decrypt(ctrKey, macKey, ciphertext);
 		Assert.assertArrayEquals(cleartext, decrypted);
 	}
+
+	@Test
+	public void testShiftLeft() {
+		final byte[] output = new byte[4];
+
+		SivMode.shiftLeft(new byte[] {
+			(byte) 0x77, (byte) 0x3A, (byte) 0x87, (byte) 0x22
+		}, output);
+		Assert.assertArrayEquals(new byte[] {
+			(byte) 0xEE, (byte) 0x75, (byte) 0x0E, (byte) 0x44
+		}, output);
+
+		SivMode.shiftLeft(new byte[] {
+			(byte) 0x56, (byte) 0x12, (byte) 0x34, (byte) 0x99
+		}, output);
+		Assert.assertArrayEquals(new byte[] {
+			(byte) 0xAC, (byte) 0x24, (byte) 0x69, (byte) 0x32
+		}, output);
+
+		SivMode.shiftLeft(new byte[] {
+			(byte) 0xCF, (byte) 0xAB, (byte) 0xBA, (byte) 0x78
+		}, output);
+		Assert.assertArrayEquals(new byte[] {
+			(byte) 0x9F, (byte) 0x57, (byte) 0x74, (byte) 0xF0
+		}, output);
+
+		SivMode.shiftLeft(new byte[] {
+			(byte) 0x89, (byte) 0x65, (byte) 0x43, (byte) 0x21
+		}, output);
+		Assert.assertArrayEquals(new byte[] {
+			(byte) 0x12, (byte) 0xCA, (byte) 0x86, (byte) 0x42
+		}, output);
+	}
+
+	@Test
+	public void testDouble() {
+		Assert.assertArrayEquals(
+				new byte[] {
+					(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,  (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+					(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,  (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+				},
+				SivMode.dbl(new byte[] {
+					(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,  (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+					(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,  (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+				})
+			);
+
+		Assert.assertArrayEquals(
+			new byte[] {
+				(byte) 0x22, (byte) 0x44, (byte) 0x66, (byte) 0x88,  (byte) 0xAA, (byte) 0xCC, (byte) 0xEF, (byte) 0x10,
+				(byte) 0x22, (byte) 0x44, (byte) 0x66, (byte) 0x88,  (byte) 0x22, (byte) 0x44, (byte) 0x22, (byte) 0x44,
+			},
+			SivMode.dbl(new byte[] {
+				(byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44,  (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88,
+				(byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44,  (byte) 0x11, (byte) 0x22, (byte) 0x11, (byte) 0x22,
+			})
+		);
+
+		Assert.assertArrayEquals(
+			new byte[] {
+				(byte) 0x10, (byte) 0x88, (byte) 0x44, (byte) 0x23,  (byte) 0x32, (byte) 0xEE, (byte) 0xAA, (byte) 0x66,
+				(byte) 0x22, (byte) 0x66, (byte) 0xAA, (byte) 0xEE,  (byte) 0x22, (byte) 0x44, (byte) 0x89, (byte) 0x97,
+			},
+			SivMode.dbl(new byte[] {
+				(byte) 0x88, (byte) 0x44, (byte) 0x22, (byte) 0x11,  (byte) 0x99, (byte) 0x77, (byte) 0x55, (byte) 0x33,
+				(byte) 0x11, (byte) 0x33, (byte) 0x55, (byte) 0x77,  (byte) 0x11, (byte) 0x22, (byte) 0x44, (byte) 0x88,
+			})
+		);
+
+		Assert.assertArrayEquals(
+			new byte[] {
+				(byte) 0xF5, (byte) 0x79, (byte) 0xF5, (byte) 0x78,  (byte) 0x02, (byte) 0x46, (byte) 0x02, (byte) 0x46,
+				(byte) 0xAD, (byte) 0xB8, (byte) 0x24, (byte) 0x68,  (byte) 0xAD, (byte) 0xB8, (byte) 0x24, (byte) 0xEF,
+			},
+			SivMode.dbl(new byte[] {
+				(byte) 0xFA, (byte) 0xBC, (byte) 0xFA, (byte) 0xBC,  (byte) 0x01, (byte) 0x23, (byte) 0x01, (byte) 0x23,
+				(byte) 0x56, (byte) 0xDC, (byte) 0x12, (byte) 0x34,  (byte) 0x56, (byte) 0xDC, (byte) 0x12, (byte) 0x34,
+			})
+		);
+	}
+
+	@Test
+	public void testXor() {
+		Assert.assertArrayEquals(
+			new byte[] {},
+			SivMode.xor(new byte[0], new byte[0])
+		);
+		Assert.assertArrayEquals(
+			new byte[3],
+			SivMode.xor(new byte[3], new byte[3])
+		);
+		Assert.assertArrayEquals(
+			new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03},
+			SivMode.xor(
+				new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81},
+				new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}
+			)
+		);
+		Assert.assertArrayEquals(
+			new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03},
+			SivMode.xor(
+				new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81},
+				new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}
+			)
+		);
+		Assert.assertArrayEquals(
+			new byte[] {(byte) 0xAB, (byte) 0x87, (byte) 0x34},
+			SivMode.xor(
+				new byte[] {(byte) 0xB9, (byte) 0xB3, (byte) 0x62},
+				new byte[] {(byte) 0x12, (byte) 0x34, (byte) 0x56, (byte) 0x78}
+			)
+		);
+	}
+
+	@Test
+	public void testXorend() {
+		Assert.assertArrayEquals(
+			new byte[] {},
+			SivMode.xorend(new byte[0], new byte[0])
+		);
+		Assert.assertArrayEquals(
+			new byte[3],
+			SivMode.xorend(new byte[3], new byte[3])
+		);
+		Assert.assertArrayEquals(
+			new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03},
+			SivMode.xorend(
+				new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81},
+				new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}
+			)
+		);
+		Assert.assertArrayEquals(
+			new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03},
+			SivMode.xorend(
+				new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81},
+				new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}
+			)
+		);
+		Assert.assertArrayEquals(
+			new byte[] {(byte) 0xB8, (byte) 0xA9, (byte) 0xAB, (byte) 0x87, (byte) 0x34},
+			SivMode.xorend(
+				new byte[] {(byte) 0xB8, (byte) 0xA9, (byte) 0xB9, (byte) 0xB3, (byte) 0x62},
+				new byte[] {(byte) 0x12, (byte) 0x34, (byte) 0x56}
+			)
+		);
+		Assert.assertArrayEquals(
+			new byte[] {
+				(byte) 0x23, (byte) 0x80, (byte) 0x32,
+				(byte) 0xEF, (byte) 0xDE, (byte) 0xCD,
+				(byte) 0xAB, (byte) 0x87, (byte) 0x34
+			},
+			SivMode.xorend(
+				new byte[] {
+					(byte) 0x23, (byte) 0x80, (byte) 0x32,
+					(byte) 0xEF, (byte) 0xDE, (byte) 0xCD,
+					(byte) 0xB9, (byte) 0xB3, (byte) 0x62,
+				},
+				new byte[] {(byte) 0x12, (byte) 0x34, (byte) 0x56}
+			)
+		);
+	}
+
 }

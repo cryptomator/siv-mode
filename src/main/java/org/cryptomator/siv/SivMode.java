@@ -257,7 +257,7 @@ public final class SivMode {
 	}
 
 	// Code taken from {@link org.bouncycastle.crypto.macs.CMac}
-	private static int shiftLeft(byte[] block, byte[] output) {
+	static int shiftLeft(byte[] block, byte[] output) {
 		int i = block.length;
 		int bit = 0;
 		while (--i >= 0) {
@@ -269,7 +269,7 @@ public final class SivMode {
 	}
 
 	// Code taken from {@link org.bouncycastle.crypto.macs.CMac}
-	private static byte[] dbl(byte[] in) {
+	static byte[] dbl(byte[] in) {
 		byte[] ret = new byte[in.length];
 		int carry = shiftLeft(in, ret);
 		int xor = 0xff & DOUBLING_CONST;
@@ -282,7 +282,7 @@ public final class SivMode {
 		return ret;
 	}
 
-	private static byte[] xor(byte[] in1, byte[] in2) {
+	static byte[] xor(byte[] in1, byte[] in2) {
 		assert in1.length <= in2.length : "Length of first input must be <= length of second input.";
 		final byte[] result = new byte[in1.length];
 		for (int i = 0; i < result.length; i++) {
@@ -291,7 +291,7 @@ public final class SivMode {
 		return result;
 	}
 
-	private static byte[] xorend(byte[] in1, byte[] in2) {
+	static byte[] xorend(byte[] in1, byte[] in2) {
 		assert in1.length >= in2.length : "Length of first input must be >= length of second input.";
 		final byte[] result = Arrays.copyOf(in1, in1.length);
 		final int diff = in1.length - in2.length;
