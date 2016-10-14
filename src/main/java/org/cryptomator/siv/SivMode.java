@@ -221,6 +221,12 @@ public final class SivMode {
 
 	// Visible for testing, throws IllegalArgumentException if key is not accepted by CMac#init(CipherParameters)
 	byte[] s2v(byte[] macKey, byte[] plaintext, byte[]... additionalData) {
+		// Maximum permitted AD length is the block size in bits - 2
+		if (additionalData.length > 126) {
+			// SIV mode cannot be used safely with this many AD fields
+			throw new IllegalArgumentException("too many Additional Data fields");
+		}
+
 		final CipherParameters params = new KeyParameter(macKey);
 		final BlockCipher cipher = cipherFactory.create();
 		final CMac mac = new CMac(cipher);

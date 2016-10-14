@@ -91,6 +91,24 @@ public class SivModeTest {
 		new SivMode().decrypt(ctrKey, macKey, new byte[10]);
 	}
 
+	@Test(expected = IllegalArgumentException.class)
+	public void testEncryptAdditionalDataLimit() {
+		final byte[] ctrKey = new byte[16];
+		final byte[] macKey = new byte[16];
+		final byte[] plaintext = new byte[30];
+
+		new SivMode().encrypt(ctrKey, macKey, plaintext, new byte[127][0]);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testDecryptAdditionalDataLimit() throws AEADBadTagException, IllegalBlockSizeException {
+		final byte[] ctrKey = new byte[16];
+		final byte[] macKey = new byte[16];
+		final byte[] plaintext = new byte[80];
+
+		new SivMode().decrypt(ctrKey, macKey, plaintext, new byte[127][0]);
+	}
+
 	@Test
 	public void testS2v() {
 		final byte[] macKey = {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, (byte) 0xfc, //
