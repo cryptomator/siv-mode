@@ -11,7 +11,8 @@
 - No dependencies (required BouncyCastle classes are repackaged)
 - Passes official RFC 5297 test vectors
 - Constant time authentication
-- Defaults on AES, but supports any block cipher
+- Defaults on AES, but supports any block cipher with a 128-bit block size.
+- Supports any key sizes that the block cipher supports (e.g. 128/192/256-bit keys for AES)
 - Thread-safe
 
 ## Usage

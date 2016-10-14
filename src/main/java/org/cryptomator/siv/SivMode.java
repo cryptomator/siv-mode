@@ -55,9 +55,15 @@ public final class SivMode {
 	/**
 	 * Creates an instance using a specific BlockCipher. If you want to use AES, just use the default constructor.
 	 * 
-	 * @param cipherFactory A factory method creating a BlockCipher.
+	 * @param cipherFactory A factory method creating a BlockCipher. Must use a block size of 128 bits (16 bytes).
 	 */
 	public SivMode(BlockCipherFactory cipherFactory) {
+		// Try using cipherFactory to check that the block size is valid.
+		// We assume here that the block size will not vary across calls to .create().
+		if (cipherFactory.create().getBlockSize() != 16) {
+			throw new IllegalArgumentException("cipherFactory must create BlockCipher objects with a 16-byte block size");
+		}
+
 		this.cipherFactory = cipherFactory;
 	}
 

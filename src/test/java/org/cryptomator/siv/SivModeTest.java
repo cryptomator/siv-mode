@@ -16,6 +16,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.crypto.BlockCipher;
+import org.bouncycastle.crypto.engines.DESEngine;
 import org.cryptomator.siv.SivMode.BlockCipherFactory;
 import org.junit.Assert;
 import org.junit.Test;
@@ -60,6 +61,20 @@ public class SivModeTest {
 		});
 
 		sivMode.encrypt(ctrKey, macKey, new byte[10]);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testInvalidCipher() {
+		final byte[] dummyKey = new byte[16];
+		final SecretKey ctrKey = new SecretKeySpec(dummyKey, "AES");
+		final SecretKey macKey = new SecretKeySpec(dummyKey, "AES");
+		final SivMode sivMode = new SivMode(new BlockCipherFactory() {
+
+			@Override
+			public BlockCipher create() {
+				return new DESEngine(); // wrong block size
+			}
+		});
 	}
 
 	@Test(expected = IllegalArgumentException.class)
