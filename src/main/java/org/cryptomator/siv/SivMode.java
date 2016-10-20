@@ -18,7 +18,6 @@ import javax.crypto.SecretKey;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.Mac;
-import org.bouncycastle.crypto.engines.AESFastEngine;
 import org.bouncycastle.crypto.engines.AESLightEngine;
 import org.bouncycastle.crypto.macs.CMac;
 import org.bouncycastle.crypto.paddings.ISO7816d4Padding;
@@ -35,7 +34,7 @@ public final class SivMode {
 	private final BlockCipherFactory cipherFactory;
 
 	/**
-	 * Creates an AES-SIV instance using BouncyCastle's {@link AESFastEngine}, which should normally be the best choice.<br>
+	 * Creates an AES-SIV instance using JCE's cipher implementation, which should normally be the best choice.<br>
 	 * 
 	 * For embedded systems, you might want to consider using {@link #SivMode(BlockCipherFactory)} with {@link AESLightEngine} instead.
 	 * 
@@ -46,7 +45,7 @@ public final class SivMode {
 
 			@Override
 			public BlockCipher create() {
-				return new AESFastEngine();
+				return new JceAesBlockCipher();
 			}
 
 		});
