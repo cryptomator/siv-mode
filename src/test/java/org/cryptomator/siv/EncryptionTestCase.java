@@ -1,8 +1,9 @@
 package org.cryptomator.siv;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,9 +17,7 @@ public class EncryptionTestCase {
 	private final byte[][] additionalData;
 	private final byte[] ciphertext;
 
-
-	public EncryptionTestCase(byte[] ctrKey, byte[] macKey, byte[] plaintext,
-			byte[][] additionalData, byte[] ciphertext) {
+	public EncryptionTestCase(byte[] ctrKey, byte[] macKey, byte[] plaintext, byte[][] additionalData, byte[] ciphertext) {
 		this.ctrKey = ctrKey;
 		this.macKey = macKey;
 		this.plaintext = plaintext;
@@ -29,7 +28,7 @@ public class EncryptionTestCase {
 	// Read and parse the test cases generated with `siv-test-vectors.go`
 	public static EncryptionTestCase[] readTestCases() throws IOException {
 		// testcases.txt should contain an output from `siv-test-vectors.go`
-		BufferedReader reader = new BufferedReader(new FileReader("testcases.txt"));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(EncryptionTestCase.class.getResourceAsStream("/testcases.txt"), StandardCharsets.US_ASCII));
 
 		try {
 			List<EncryptionTestCase> result = new ArrayList<EncryptionTestCase>();
@@ -45,7 +44,7 @@ public class EncryptionTestCase {
 				byte[] plaintext = DatatypeConverter.parseHexBinary(reader.readLine());
 				int adCount = Integer.parseInt(reader.readLine());
 				byte[][] ad = new byte[adCount][];
-				for (int adIdx=0; adIdx<adCount; adIdx++) {
+				for (int adIdx = 0; adIdx < adCount; adIdx++) {
 					ad[adIdx] = DatatypeConverter.parseHexBinary(reader.readLine());
 				}
 				byte[] ciphertext = DatatypeConverter.parseHexBinary(reader.readLine());
@@ -79,7 +78,7 @@ public class EncryptionTestCase {
 	public byte[][] getAdditionalData() {
 		final byte[][] result = new byte[additionalData.length][];
 
-		for (int i=0; i<additionalData.length; i++) {
+		for (int i = 0; i < additionalData.length; i++) {
 			result[i] = Arrays.copyOf(additionalData[i], additionalData[i].length);
 		}
 
