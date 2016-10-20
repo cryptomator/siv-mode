@@ -8,6 +8,7 @@ package org.cryptomator.siv;
  *     Sebastian Stenzel - initial API and implementation
  ******************************************************************************/
 
+import java.io.IOException;
 import java.security.InvalidKeyException;
 
 import javax.crypto.AEADBadTagException;
@@ -518,6 +519,138 @@ public class SivModeTest {
 				new byte[] {(byte) 0x12, (byte) 0x34, (byte) 0x56}
 			)
 		);
+	}
+
+	@Test
+	public void testGeneratedTestCases() throws IOException, AEADBadTagException, IllegalBlockSizeException {
+		final EncryptionTestCase[] allTestCases = EncryptionTestCase.readTestCases();
+
+		// Check that decryption fails if the wrong MAC key is used
+		for (int testCaseIdx=0; testCaseIdx<allTestCases.length; testCaseIdx++) {
+			EncryptionTestCase testCase = allTestCases[testCaseIdx];
+			final byte[] macKey = testCase.getMacKey();
+
+			// Pick some arbitrary key byte to tamper with
+			final int tamperedByteIndex = testCaseIdx % macKey.length;
+
+			// Flip a single bit
+			macKey[tamperedByteIndex] ^= 0x10;
+
+			try {
+				new SivMode().decrypt(
+					testCase.getCtrKey(), macKey,
+					testCase.getCiphertext(), testCase.getAdditionalData()
+				);
+				Assert.fail();
+			} catch (AEADBadTagException ex) {
+				// Test case passed.
+			}
+		}
+
+		// Check that decryption fails if ciphertext is wrong
+		// Flipping a single bit anywhere in the ciphertext will invalidate either the IV or the plaintext
+		for (int testCaseIdx=0; testCaseIdx<allTestCases.length; testCaseIdx++) {
+			EncryptionTestCase testCase = allTestCases[testCaseIdx];
+			byte[] ciphertext = testCase.getCiphertext();
+
+			// Pick some arbitrary ciphertext byte to tamper with
+			final int tamperedByteIndex = testCaseIdx % ciphertext.length;
+
+			// Flip a single bit
+			ciphertext[tamperedByteIndex] ^= 0x10;
+
+			try {
+				new SivMode().decrypt(
+					testCase.getCtrKey(), testCase.getMacKey(),
+					ciphertext, testCase.getAdditionalData()
+				);
+				Assert.fail();
+			} catch (AEADBadTagException ex) {
+				// Test case passed.
+			}
+		}
+
+		// Check that decryption fails if additional data is tampered with
+		for (int testCaseIdx=0; testCaseIdx<allTestCases.length; testCaseIdx++) {
+			EncryptionTestCase testCase = allTestCases[testCaseIdx];
+			byte[][] ad = testCase.getAdditionalData();
+
+			// Try flipping bits in the additional data elements
+			for (int adIdx=0; adIdx<ad.length; adIdx++) {
+				// Skip if this ad element is empty
+				if (ad[adIdx].length == 0) {
+					continue;
+				}
+
+				// Pick some arbitrary byte to tamper with
+				final int tamperedByteIndex = testCaseIdx % ad[adIdx].length;
+
+				// Flip a single bit
+				ad[adIdx][tamperedByteIndex] ^= 0x04;
+
+				try {
+					new SivMode().decrypt(
+						testCase.getCtrKey(), testCase.getMacKey(),
+						testCase.getCiphertext(), ad
+					);
+					Assert.fail();
+				} catch (AEADBadTagException ex) {
+					// Test case passed.
+				}
+
+				// Restore ad to original value
+				ad[adIdx][tamperedByteIndex] ^= 0x04;
+			}
+
+			// If there's room for another AD element
+			if (ad.length <= 125) {
+				// Try prepending an AD element
+				byte[][] prependedAd = new byte[ad.length + 1][];
+				prependedAd[0] = new byte[testCaseIdx % 16];
+				System.arraycopy(ad, 0, prependedAd, 1, ad.length);
+				try {
+					new SivMode().decrypt(
+						testCase.getCtrKey(), testCase.getMacKey(),
+						testCase.getCiphertext(), prependedAd
+					);
+					Assert.fail();
+				} catch (AEADBadTagException ex) {
+					// Test case passed.
+				}
+
+				// Try appending an AD element
+				byte[][] appendedAd = new byte[ad.length + 1][];
+				appendedAd[ad.length] = new byte[testCaseIdx % 16];
+				System.arraycopy(ad, 0, appendedAd, 0, ad.length);
+				try {
+					new SivMode().decrypt(
+						testCase.getCtrKey(), testCase.getMacKey(),
+						testCase.getCiphertext(), appendedAd
+					);
+					Assert.fail();
+				} catch (AEADBadTagException ex) {
+					// Test case passed.
+				}
+			}
+		}
+
+		// Check that ciphertexts/IVs are produced correctly
+		for (EncryptionTestCase testCase : allTestCases) {
+			final byte[] actualCiphertext = new SivMode().encrypt(
+				testCase.getCtrKey(), testCase.getMacKey(),
+				testCase.getPlaintext(), testCase.getAdditionalData()
+			);
+			Assert.assertArrayEquals(testCase.getCiphertext(), actualCiphertext);
+		}
+
+		// Check that ciphertexts are decrypted correctly
+		for (EncryptionTestCase testCase : allTestCases) {
+			final byte[] actualPlaintext = new SivMode().decrypt(
+				testCase.getCtrKey(), testCase.getMacKey(),
+				testCase.getCiphertext(), testCase.getAdditionalData()
+			);
+			Assert.assertArrayEquals(testCase.getPlaintext(), actualPlaintext);
+		}
 	}
 
 }
