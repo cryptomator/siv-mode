@@ -31,7 +31,7 @@ public final class SivMode {
 	private static final byte[] BYTES_ZERO = new byte[16];
 	private static final byte DOUBLING_CONST = (byte) 0x87;
 
-	private final BlockCipherFactory cipherFactory;
+	private final ThreadLocal<BlockCipher> threadLocalCipher;
 
 	/**
 	 * Creates an AES-SIV instance using JCE's cipher implementation, which should normally be the best choice.<br>
@@ -52,18 +52,25 @@ public final class SivMode {
 	}
 
 	/**
-	 * Creates an instance using a specific BlockCipher. If you want to use AES, just use the default constructor.
+	 * Creates an instance using a specific Blockcipher.get(). If you want to use AES, just use the default constructor.
 	 * 
-	 * @param cipherFactory A factory method creating a BlockCipher. Must use a block size of 128 bits (16 bytes).
+	 * @param cipherFactory A factory method creating a Blockcipher.get(). Must use a block size of 128 bits (16 bytes).
 	 */
-	public SivMode(BlockCipherFactory cipherFactory) {
+	public SivMode(final BlockCipherFactory cipherFactory) {
 		// Try using cipherFactory to check that the block size is valid.
 		// We assume here that the block size will not vary across calls to .create().
 		if (cipherFactory.create().getBlockSize() != 16) {
 			throw new IllegalArgumentException("cipherFactory must create BlockCipher objects with a 16-byte block size");
 		}
 
-		this.cipherFactory = cipherFactory;
+		this.threadLocalCipher = new ThreadLocal<BlockCipher>() {
+
+			@Override
+			protected BlockCipher initialValue() {
+				return cipherFactory.create();
+			}
+
+		};
 	}
 
 	/**
@@ -79,18 +86,18 @@ public final class SivMode {
 	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param plaintext Your plaintext, which shall be encrypted.
-	 * @param additionalData Optional additional data, which gets authenticated but not encrypted.
+	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
 	 * @throws IllegalArgumentException if keys are invalid or {@link SecretKey#getEncoded()} is not supported.
 	 */
-	public byte[] encrypt(SecretKey ctrKey, SecretKey macKey, byte[] plaintext, byte[]... additionalData) {
+	public byte[] encrypt(SecretKey ctrKey, SecretKey macKey, byte[] plaintext, byte[]... associatedData) {
 		final byte[] ctrKeyBytes = ctrKey.getEncoded();
 		final byte[] macKeyBytes = macKey.getEncoded();
 		if (ctrKeyBytes == null || macKeyBytes == null) {
 			throw new IllegalArgumentException("Can't get bytes of given key.");
 		}
 		try {
-			return encrypt(ctrKeyBytes, macKeyBytes, plaintext, additionalData);
+			return encrypt(ctrKeyBytes, macKeyBytes, plaintext, associatedData);
 		} finally {
 			Arrays.fill(ctrKeyBytes, (byte) 0);
 			Arrays.fill(macKeyBytes, (byte) 0);
@@ -103,12 +110,12 @@ public final class SivMode {
 	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param plaintext Your plaintext, which shall be encrypted.
-	 * @param additionalData Optional additional data, which gets authenticated but not encrypted.
+	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
 	 * @throws IllegalArgumentException if the either of the two keys is of invalid length for the used {@link BlockCipher}.
 	 */
-	public byte[] encrypt(byte[] ctrKey, byte[] macKey, byte[] plaintext, byte[]... additionalData) {
-		final byte[] iv = s2v(macKey, plaintext, additionalData);
+	public byte[] encrypt(byte[] ctrKey, byte[] macKey, byte[] plaintext, byte[]... associatedData) {
+		final byte[] iv = s2v(macKey, plaintext, associatedData);
 
 		// Check if plaintext length will cause overflows
 		if (plaintext.length > (Integer.MAX_VALUE - 16)) {
@@ -125,7 +132,7 @@ public final class SivMode {
 		final long initialCtrVal = ctrBuf.getLong(8);
 
 		final byte[] x = new byte[numBlocks * 16];
-		final BlockCipher cipher = cipherFactory.create();
+		final BlockCipher cipher = threadLocalCipher.get();
 		cipher.init(true, new KeyParameter(ctrKey));
 		for (int i = 0; i < numBlocks; i++) {
 			final long ctrVal = initialCtrVal + i;
@@ -149,20 +156,20 @@ public final class SivMode {
 	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param ciphertext Your cipehrtext, which shall be decrypted.
-	 * @param additionalData Optional additional data, which needs to be authenticated during decryption.
+	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
 	 * @throws IllegalArgumentException If keys are invalid or {@link SecretKey#getEncoded()} is not supported.
-	 * @throws AEADBadTagException If the authentication failed, e.g. because ciphertext and/or additionalData are corrupted.
+	 * @throws AEADBadTagException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
 	 * @throws IllegalBlockSizeException If the provided ciphertext is of invalid length.
 	 */
-	public byte[] decrypt(SecretKey ctrKey, SecretKey macKey, byte[] ciphertext, byte[]... additionalData) throws AEADBadTagException, IllegalBlockSizeException {
+	public byte[] decrypt(SecretKey ctrKey, SecretKey macKey, byte[] ciphertext, byte[]... associatedData) throws AEADBadTagException, IllegalBlockSizeException {
 		final byte[] ctrKeyBytes = ctrKey.getEncoded();
 		final byte[] macKeyBytes = macKey.getEncoded();
 		if (ctrKeyBytes == null || macKeyBytes == null) {
 			throw new IllegalArgumentException("Can't get bytes of given key.");
 		}
 		try {
-			return decrypt(ctrKeyBytes, macKeyBytes, ciphertext, additionalData);
+			return decrypt(ctrKeyBytes, macKeyBytes, ciphertext, associatedData);
 		} finally {
 			Arrays.fill(ctrKeyBytes, (byte) 0);
 			Arrays.fill(macKeyBytes, (byte) 0);
@@ -175,13 +182,13 @@ public final class SivMode {
 	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param ciphertext Your ciphertext, which shall be encrypted.
-	 * @param additionalData Optional additional data, which needs to be authenticated during decryption.
+	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
 	 * @throws IllegalArgumentException If the either of the two keys is of invalid length for the used {@link BlockCipher}.
-	 * @throws AEADBadTagException If the authentication failed, e.g. because ciphertext and/or additionalData are corrupted.
+	 * @throws AEADBadTagException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
 	 * @throws IllegalBlockSizeException If the provided ciphertext is of invalid length.
 	 */
-	public byte[] decrypt(byte[] ctrKey, byte[] macKey, byte[] ciphertext, byte[]... additionalData) throws AEADBadTagException, IllegalBlockSizeException {
+	public byte[] decrypt(byte[] ctrKey, byte[] macKey, byte[] ciphertext, byte[]... associatedData) throws AEADBadTagException, IllegalBlockSizeException {
 		if (ciphertext.length < 16) {
 			throw new IllegalBlockSizeException("Input length must be greater than or equal 16.");
 		}
@@ -200,7 +207,7 @@ public final class SivMode {
 		final long initialCtrVal = ctrBuf.getLong(8);
 
 		final byte[] x = new byte[numBlocks * 16];
-		final BlockCipher cipher = cipherFactory.create();
+		final BlockCipher cipher = threadLocalCipher.get();
 		cipher.init(true, new KeyParameter(ctrKey));
 		for (int i = 0; i < numBlocks; i++) {
 			final long ctrVal = initialCtrVal + i;
@@ -211,7 +218,7 @@ public final class SivMode {
 
 		final byte[] plaintext = xor(actualCiphertext, x);
 
-		final byte[] control = s2v(macKey, plaintext, additionalData);
+		final byte[] control = s2v(macKey, plaintext, associatedData);
 
 		// time-constant comparison (taken from MessageDigest.isEqual in JDK8)
 		assert iv.length == control.length;
@@ -228,21 +235,20 @@ public final class SivMode {
 	}
 
 	// Visible for testing, throws IllegalArgumentException if key is not accepted by CMac#init(CipherParameters)
-	byte[] s2v(byte[] macKey, byte[] plaintext, byte[]... additionalData) {
+	byte[] s2v(byte[] macKey, byte[] plaintext, byte[]... associatedData) {
 		// Maximum permitted AD length is the block size in bits - 2
-		if (additionalData.length > 126) {
+		if (associatedData.length > 126) {
 			// SIV mode cannot be used safely with this many AD fields
-			throw new IllegalArgumentException("too many Additional Data fields");
+			throw new IllegalArgumentException("too many Associated Data fields");
 		}
 
 		final CipherParameters params = new KeyParameter(macKey);
-		final BlockCipher cipher = cipherFactory.create();
-		final CMac mac = new CMac(cipher);
+		final CMac mac = new CMac(threadLocalCipher.get());
 		mac.init(params);
 
 		byte[] d = mac(mac, BYTES_ZERO);
 
-		for (byte[] s : additionalData) {
+		for (byte[] s : associatedData) {
 			d = xor(dbl(d), mac(mac, s));
 		}
 

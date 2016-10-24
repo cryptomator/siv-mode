@@ -105,7 +105,7 @@ public class SivModeTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testEncryptAdditionalDataLimit() {
+	public void testEncryptAssociatedDataLimit() {
 		final byte[] ctrKey = new byte[16];
 		final byte[] macKey = new byte[16];
 		final byte[] plaintext = new byte[30];
@@ -114,7 +114,7 @@ public class SivModeTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testDecryptAdditionalDataLimit() throws AEADBadTagException, IllegalBlockSizeException {
+	public void testDecryptAssociatedDataLimit() throws AEADBadTagException, IllegalBlockSizeException {
 		final byte[] ctrKey = new byte[16];
 		final byte[] macKey = new byte[16];
 		final byte[] plaintext = new byte[80];
@@ -438,7 +438,7 @@ public class SivModeTest {
 			macKey[tamperedByteIndex] ^= 0x10;
 
 			try {
-				new SivMode().decrypt(testCase.getCtrKey(), macKey, testCase.getCiphertext(), testCase.getAdditionalData());
+				new SivMode().decrypt(testCase.getCtrKey(), macKey, testCase.getCiphertext(), testCase.getAssociatedData());
 				Assert.fail();
 			} catch (AEADBadTagException ex) {
 				// Test case passed.
@@ -458,19 +458,19 @@ public class SivModeTest {
 			ciphertext[tamperedByteIndex] ^= 0x10;
 
 			try {
-				new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), ciphertext, testCase.getAdditionalData());
+				new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), ciphertext, testCase.getAssociatedData());
 				Assert.fail();
 			} catch (AEADBadTagException ex) {
 				// Test case passed.
 			}
 		}
 
-		// Check that decryption fails if additional data is tampered with
+		// Check that decryption fails if associated data is tampered with
 		for (int testCaseIdx = 0; testCaseIdx < allTestCases.length; testCaseIdx++) {
 			EncryptionTestCase testCase = allTestCases[testCaseIdx];
-			byte[][] ad = testCase.getAdditionalData();
+			byte[][] ad = testCase.getAssociatedData();
 
-			// Try flipping bits in the additional data elements
+			// Try flipping bits in the associated data elements
 			for (int adIdx = 0; adIdx < ad.length; adIdx++) {
 				// Skip if this ad element is empty
 				if (ad[adIdx].length == 0) {
@@ -522,13 +522,13 @@ public class SivModeTest {
 
 		// Check that ciphertexts/IVs are produced correctly
 		for (EncryptionTestCase testCase : allTestCases) {
-			final byte[] actualCiphertext = new SivMode().encrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getPlaintext(), testCase.getAdditionalData());
+			final byte[] actualCiphertext = new SivMode().encrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getPlaintext(), testCase.getAssociatedData());
 			Assert.assertArrayEquals(testCase.getCiphertext(), actualCiphertext);
 		}
 
 		// Check that ciphertexts are decrypted correctly
 		for (EncryptionTestCase testCase : allTestCases) {
-			final byte[] actualPlaintext = new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), testCase.getAdditionalData());
+			final byte[] actualPlaintext = new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), testCase.getAssociatedData());
 			Assert.assertArrayEquals(testCase.getPlaintext(), actualPlaintext);
 		}
 	}

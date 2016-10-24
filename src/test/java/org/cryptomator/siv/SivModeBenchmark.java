@@ -11,10 +11,14 @@ package org.cryptomator.siv;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import javax.crypto.AEADBadTagException;
+import javax.crypto.IllegalBlockSizeException;
+
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.engines.AESFastEngine;
 import org.bouncycastle.crypto.engines.AESLightEngine;
 import org.cryptomator.siv.SivMode.BlockCipherFactory;
+import org.junit.Assert;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Level;
@@ -25,22 +29,23 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.infra.Blackhole;
 
 /**
  * Needs to be compiled via maven as the JMH annotation processor needs to do stuff...
  */
 @State(Scope.Thread)
-@Warmup(iterations = 2, time = 500, timeUnit = TimeUnit.MILLISECONDS)
+@Warmup(iterations = 3, time = 300, timeUnit = TimeUnit.MILLISECONDS)
 @Measurement(iterations = 2, time = 500, timeUnit = TimeUnit.MILLISECONDS)
 @BenchmarkMode(value = {Mode.AverageTime})
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 public class SivModeBenchmark {
 
 	private int run;
-	private final byte[] encKeyBuf = new byte[16];
-	private final byte[] macKeyBuf = new byte[16];
-	private final byte[] testData = new byte[8 * 1024];
-	private final byte[] adData = new byte[1024];
+	private final byte[] encKey = new byte[16];
+	private final byte[] macKey = new byte[16];
+	private final byte[] cleartextData = new byte[1000];
+	private final byte[] associatedData = new byte[100];
 
 	private final SivMode jceSivMode = new SivMode();
 	private final SivMode bcFastSivMode = new SivMode(new BlockCipherFactory() {
@@ -63,25 +68,37 @@ public class SivModeBenchmark {
 	@Setup(Level.Trial)
 	public void shuffleData() {
 		run++;
-		Arrays.fill(encKeyBuf, (byte) (run & 0xFF));
-		Arrays.fill(macKeyBuf, (byte) (run & 0xFF));
-		Arrays.fill(testData, (byte) (run & 0xFF));
-		Arrays.fill(adData, (byte) (run & 0xFF));
+		Arrays.fill(encKey, (byte) (run & 0xFF));
+		Arrays.fill(macKey, (byte) (run & 0xFF));
+		Arrays.fill(cleartextData, (byte) (run & 0xFF));
+		Arrays.fill(associatedData, (byte) (run & 0xFF));
 	}
 
 	@Benchmark
-	public void benchmarkJce() {
-		jceSivMode.encrypt(encKeyBuf, macKeyBuf, testData, adData);
+	public void benchmarkJce(Blackhole bh) throws AEADBadTagException, IllegalBlockSizeException {
+		byte[] encrypted = jceSivMode.encrypt(encKey, macKey, cleartextData, associatedData);
+		byte[] decrypted = jceSivMode.decrypt(encKey, macKey, encrypted, associatedData);
+		Assert.assertArrayEquals(cleartextData, decrypted);
+		bh.consume(encrypted);
+		bh.consume(decrypted);
 	}
 
 	@Benchmark
-	public void benchmarkBcFast() {
-		bcFastSivMode.encrypt(encKeyBuf, macKeyBuf, testData, adData);
+	public void benchmarkBcFast(Blackhole bh) throws AEADBadTagException, IllegalBlockSizeException {
+		byte[] encrypted = bcFastSivMode.encrypt(encKey, macKey, cleartextData, associatedData);
+		byte[] decrypted = bcFastSivMode.decrypt(encKey, macKey, encrypted, associatedData);
+		Assert.assertArrayEquals(cleartextData, decrypted);
+		bh.consume(encrypted);
+		bh.consume(decrypted);
 	}
 
 	@Benchmark
-	public void benchmarkBcLight() {
-		bcLightSivMode.encrypt(encKeyBuf, macKeyBuf, testData, adData);
+	public void benchmarkBcLight(Blackhole bh) throws AEADBadTagException, IllegalBlockSizeException {
+		byte[] encrypted = bcLightSivMode.encrypt(encKey, macKey, cleartextData, associatedData);
+		byte[] decrypted = bcLightSivMode.decrypt(encKey, macKey, encrypted, associatedData);
+		Assert.assertArrayEquals(cleartextData, decrypted);
+		bh.consume(encrypted);
+		bh.consume(decrypted);
 	}
 
 }

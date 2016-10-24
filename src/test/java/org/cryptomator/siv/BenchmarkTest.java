@@ -23,7 +23,7 @@ public class BenchmarkTest {
 				// Specify which benchmarks to run
 				.include(getClass().getPackage().getName() + ".*Benchmark.*")
 				// Set the following options as needed
-				.threads(2).forks(1) //
+				.threads(2).forks(2) //
 				.shouldFailOnError(true).shouldDoGC(true)
 				// .jvmArgs("-XX:+UnlockDiagnosticVMOptions", "-XX:+PrintInlining")
 				// .addProfiler(WinPerfAsmProfiler.class)

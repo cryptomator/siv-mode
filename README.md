@@ -24,9 +24,9 @@ public void encrypt() {
   byte[] decrypted = AES_SIV.decrypt(ctrKey, macKey, encrypted);
 }
 
-public void encryptWithAdditionalData() {
-  byte[] encrypted = AES_SIV.encrypt(ctrKey, macKey, "hello world".getBytes(), "additional".getBytes(), "data".getBytes());
-  byte[] decrypted = AES_SIV.decrypt(ctrKey, macKey, encrypted, "additional".getBytes(), "data".getBytes());
+public void encryptWithAssociatedData() {
+  byte[] encrypted = AES_SIV.encrypt(ctrKey, macKey, "hello world".getBytes(), "associated".getBytes(), "data".getBytes());
+  byte[] decrypted = AES_SIV.decrypt(ctrKey, macKey, encrypted, "associated".getBytes(), "data".getBytes());
 }
 ```
 
@@ -37,7 +37,7 @@ public void encryptWithAdditionalData() {
   <dependency>
     <groupId>org.cryptomator</groupId>
     <artifactId>siv-mode</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
   </dependency>
 </dependencies>
 ```

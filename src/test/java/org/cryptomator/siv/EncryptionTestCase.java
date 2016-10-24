@@ -75,7 +75,7 @@ public class EncryptionTestCase {
 		return Arrays.copyOf(plaintext, plaintext.length);
 	}
 
-	public byte[][] getAdditionalData() {
+	public byte[][] getAssociatedData() {
 		final byte[][] result = new byte[additionalData.length][];
 
 		for (int i = 0; i < additionalData.length; i++) {
