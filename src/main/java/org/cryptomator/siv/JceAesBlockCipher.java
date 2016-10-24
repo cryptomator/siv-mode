@@ -8,7 +8,6 @@ package org.cryptomator.siv;
  *     Sebastian Stenzel - initial API and implementation
  ******************************************************************************/
 
-import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
@@ -78,10 +77,8 @@ class JceAesBlockCipher implements BlockCipher {
 		if (in.length - inOff < getBlockSize()) {
 			throw new DataLengthException("Insufficient data in 'in'.");
 		}
-		ByteBuffer inBuf = ByteBuffer.wrap(in, inOff, getBlockSize());
-		ByteBuffer outBuf = ByteBuffer.wrap(out, outOff, out.length - outOff);
 		try {
-			return cipher.update(inBuf, outBuf);
+			return cipher.update(in, inOff, getBlockSize(), out, outOff);
 		} catch (ShortBufferException e) {
 			throw new DataLengthException("Insufficient space in 'out'.");
 		}

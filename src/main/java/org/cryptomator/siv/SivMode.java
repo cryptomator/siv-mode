@@ -75,7 +75,6 @@ public final class SivMode {
 
 	/**
 	 * Convenience method, if you are using the javax.crypto API. This is just a wrapper for {@link #encrypt(byte[], byte[], byte[], byte[]...)}.
-	 * This method accesses key bytes directly and destroys these bytes when finished. However the two given keys will remain untouched.
 	 * 
 	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
@@ -100,7 +99,6 @@ public final class SivMode {
 
 	/**
 	 * Encrypts plaintext using SIV mode. A block cipher defined by the constructor is being used.<br>
-	 * This method leaves the two given keys untouched, the calling function needs to makes sure, key bytes are destroyed when finished.
 	 * 
 	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
@@ -147,7 +145,6 @@ public final class SivMode {
 
 	/**
 	 * Convenience method, if you are using the javax.crypto API. This is just a wrapper for {@link #decrypt(byte[], byte[], byte[], byte[]...)}.
-	 * This method accesses key bytes directly and destroys these bytes when finished. However the two given keys will remain untouched.
 	 * 
 	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
@@ -174,7 +171,6 @@ public final class SivMode {
 
 	/**
 	 * Decrypts ciphertext using SIV mode. A block cipher defined by the constructor is being used.<br>
-	 * This method leaves the two given keys untouched, the calling function needs to makes sure, key bytes are destroyed when finished.
 	 * 
 	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
 	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
