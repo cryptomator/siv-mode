@@ -11,7 +11,6 @@ package org.cryptomator.siv;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 
-import javax.crypto.AEADBadTagException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -76,7 +75,7 @@ public class SivModeTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testDecryptWithInvalidKey1() throws AEADBadTagException, IllegalBlockSizeException {
+	public void testDecryptWithInvalidKey1() throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		SecretKey key1 = Mockito.mock(SecretKey.class);
 		Mockito.when(key1.getEncoded()).thenReturn(null);
 		SecretKey key2 = Mockito.mock(SecretKey.class);
@@ -86,7 +85,7 @@ public class SivModeTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testDecryptWithInvalidKey2() throws AEADBadTagException, IllegalBlockSizeException {
+	public void testDecryptWithInvalidKey2() throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		SecretKey key1 = Mockito.mock(SecretKey.class);
 		Mockito.when(key1.getEncoded()).thenReturn(new byte[16]);
 		SecretKey key2 = Mockito.mock(SecretKey.class);
@@ -96,7 +95,7 @@ public class SivModeTest {
 	}
 
 	@Test(expected = IllegalBlockSizeException.class)
-	public void testDecryptWithInvalidBlockSize() throws AEADBadTagException, IllegalBlockSizeException {
+	public void testDecryptWithInvalidBlockSize() throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		final byte[] dummyKey = new byte[16];
 		final SecretKey ctrKey = new SecretKeySpec(dummyKey, "AES");
 		final SecretKey macKey = new SecretKeySpec(dummyKey, "AES");
@@ -114,7 +113,7 @@ public class SivModeTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
-	public void testDecryptAssociatedDataLimit() throws AEADBadTagException, IllegalBlockSizeException {
+	public void testDecryptAssociatedDataLimit() throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		final byte[] ctrKey = new byte[16];
 		final byte[] macKey = new byte[16];
 		final byte[] plaintext = new byte[80];
@@ -188,7 +187,7 @@ public class SivModeTest {
 	}
 
 	@Test
-	public void testSivDecrypt() throws AEADBadTagException, IllegalBlockSizeException {
+	public void testSivDecrypt() throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		final byte[] macKey = {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, (byte) 0xfc, //
 				(byte) 0xfb, (byte) 0xfa, (byte) 0xf9, (byte) 0xf8, //
 				(byte) 0xf7, (byte) 0xf6, (byte) 0xf5, (byte) 0xf4, //
@@ -224,8 +223,8 @@ public class SivModeTest {
 		Assert.assertArrayEquals(expected, result);
 	}
 
-	@Test(expected = AEADBadTagException.class)
-	public void testSivDecryptWithInvalidKey() throws AEADBadTagException, IllegalBlockSizeException {
+	@Test(expected = UnauthenticCiphertextException.class)
+	public void testSivDecryptWithInvalidKey() throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		final byte[] macKey = {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, (byte) 0xfc, //
 				(byte) 0xfb, (byte) 0xfa, (byte) 0xf9, (byte) 0xf8, //
 				(byte) 0xf7, (byte) 0xf6, (byte) 0xf5, (byte) 0xf4, //
@@ -256,7 +255,7 @@ public class SivModeTest {
 	}
 
 	@Test(expected = IllegalBlockSizeException.class)
-	public void testSivDecryptWithInvalidCiphertext() throws AEADBadTagException, IllegalBlockSizeException {
+	public void testSivDecryptWithInvalidCiphertext() throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		final byte[] macKey = {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, (byte) 0xfc, //
 				(byte) 0xfb, (byte) 0xfa, (byte) 0xf9, (byte) 0xf8, //
 				(byte) 0xf7, (byte) 0xf6, (byte) 0xf5, (byte) 0xf4, //
@@ -346,7 +345,7 @@ public class SivModeTest {
 	}
 
 	@Test
-	public void testEncryptionAndDecryptionUsingJavaxCryptoApi() throws AEADBadTagException, IllegalBlockSizeException {
+	public void testEncryptionAndDecryptionUsingJavaxCryptoApi() throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		final byte[] dummyKey = new byte[16];
 		final SecretKey ctrKey = new SecretKeySpec(dummyKey, "AES");
 		final SecretKey macKey = new SecretKeySpec(dummyKey, "AES");
@@ -423,7 +422,7 @@ public class SivModeTest {
 	}
 
 	@Test
-	public void testGeneratedTestCases() throws IOException, AEADBadTagException, IllegalBlockSizeException {
+	public void testGeneratedTestCases() throws IOException, UnauthenticCiphertextException, IllegalBlockSizeException {
 		final EncryptionTestCase[] allTestCases = EncryptionTestCase.readTestCases();
 
 		// Check that decryption fails if the wrong MAC key is used
@@ -440,7 +439,7 @@ public class SivModeTest {
 			try {
 				new SivMode().decrypt(testCase.getCtrKey(), macKey, testCase.getCiphertext(), testCase.getAssociatedData());
 				Assert.fail();
-			} catch (AEADBadTagException ex) {
+			} catch (UnauthenticCiphertextException ex) {
 				// Test case passed.
 			}
 		}
@@ -460,7 +459,7 @@ public class SivModeTest {
 			try {
 				new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), ciphertext, testCase.getAssociatedData());
 				Assert.fail();
-			} catch (AEADBadTagException ex) {
+			} catch (UnauthenticCiphertextException ex) {
 				// Test case passed.
 			}
 		}
@@ -486,7 +485,7 @@ public class SivModeTest {
 				try {
 					new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), ad);
 					Assert.fail();
-				} catch (AEADBadTagException ex) {
+				} catch (UnauthenticCiphertextException ex) {
 					// Test case passed.
 				}
 
@@ -503,7 +502,7 @@ public class SivModeTest {
 				try {
 					new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), prependedAd);
 					Assert.fail();
-				} catch (AEADBadTagException ex) {
+				} catch (UnauthenticCiphertextException ex) {
 					// Test case passed.
 				}
 
@@ -514,7 +513,7 @@ public class SivModeTest {
 				try {
 					new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), appendedAd);
 					Assert.fail();
-				} catch (AEADBadTagException ex) {
+				} catch (UnauthenticCiphertextException ex) {
 					// Test case passed.
 				}
 			}

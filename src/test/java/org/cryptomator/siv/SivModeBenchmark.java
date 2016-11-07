@@ -11,7 +11,6 @@ package org.cryptomator.siv;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-import javax.crypto.AEADBadTagException;
 import javax.crypto.IllegalBlockSizeException;
 
 import org.bouncycastle.crypto.BlockCipher;
@@ -75,7 +74,7 @@ public class SivModeBenchmark {
 	}
 
 	@Benchmark
-	public void benchmarkJce(Blackhole bh) throws AEADBadTagException, IllegalBlockSizeException {
+	public void benchmarkJce(Blackhole bh) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		byte[] encrypted = jceSivMode.encrypt(encKey, macKey, cleartextData, associatedData);
 		byte[] decrypted = jceSivMode.decrypt(encKey, macKey, encrypted, associatedData);
 		Assert.assertArrayEquals(cleartextData, decrypted);
@@ -84,7 +83,7 @@ public class SivModeBenchmark {
 	}
 
 	@Benchmark
-	public void benchmarkBcFast(Blackhole bh) throws AEADBadTagException, IllegalBlockSizeException {
+	public void benchmarkBcFast(Blackhole bh) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		byte[] encrypted = bcFastSivMode.encrypt(encKey, macKey, cleartextData, associatedData);
 		byte[] decrypted = bcFastSivMode.decrypt(encKey, macKey, encrypted, associatedData);
 		Assert.assertArrayEquals(cleartextData, decrypted);
@@ -93,7 +92,7 @@ public class SivModeBenchmark {
 	}
 
 	@Benchmark
-	public void benchmarkBcLight(Blackhole bh) throws AEADBadTagException, IllegalBlockSizeException {
+	public void benchmarkBcLight(Blackhole bh) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		byte[] encrypted = bcLightSivMode.encrypt(encKey, macKey, cleartextData, associatedData);
 		byte[] decrypted = bcLightSivMode.decrypt(encKey, macKey, encrypted, associatedData);
 		Assert.assertArrayEquals(cleartextData, decrypted);

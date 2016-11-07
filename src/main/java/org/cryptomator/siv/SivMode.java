@@ -11,7 +11,6 @@ package org.cryptomator.siv;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import javax.crypto.AEADBadTagException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 
@@ -159,10 +158,10 @@ public final class SivMode {
 	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
 	 * @throws IllegalArgumentException If keys are invalid or {@link SecretKey#getEncoded()} is not supported.
-	 * @throws AEADBadTagException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
+	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
 	 * @throws IllegalBlockSizeException If the provided ciphertext is of invalid length.
 	 */
-	public byte[] decrypt(SecretKey ctrKey, SecretKey macKey, byte[] ciphertext, byte[]... associatedData) throws AEADBadTagException, IllegalBlockSizeException {
+	public byte[] decrypt(SecretKey ctrKey, SecretKey macKey, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		final byte[] ctrKeyBytes = ctrKey.getEncoded();
 		final byte[] macKeyBytes = macKey.getEncoded();
 		if (ctrKeyBytes == null || macKeyBytes == null) {
@@ -185,10 +184,10 @@ public final class SivMode {
 	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
 	 * @throws IllegalArgumentException If the either of the two keys is of invalid length for the used {@link BlockCipher}.
-	 * @throws AEADBadTagException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
+	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
 	 * @throws IllegalBlockSizeException If the provided ciphertext is of invalid length.
 	 */
-	public byte[] decrypt(byte[] ctrKey, byte[] macKey, byte[] ciphertext, byte[]... associatedData) throws AEADBadTagException, IllegalBlockSizeException {
+	public byte[] decrypt(byte[] ctrKey, byte[] macKey, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		if (ciphertext.length < 16) {
 			throw new IllegalBlockSizeException("Input length must be greater than or equal 16.");
 		}
@@ -230,7 +229,7 @@ public final class SivMode {
 		if (diff == 0) {
 			return plaintext;
 		} else {
-			throw new AEADBadTagException("authentication in SIV decryption failed");
+			throw new UnauthenticCiphertextException("authentication in SIV decryption failed");
 		}
 	}
 

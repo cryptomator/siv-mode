@@ -14,6 +14,10 @@
 - Defaults on AES, but supports any block cipher with a 128-bit block size.
 - Supports any key sizes that the block cipher supports (e.g. 128/192/256-bit keys for AES)
 - Thread-safe
+- Compatible with Android API Level 16 (since version 1.2.0)
+
+## Audits
+- [Version 1.0.8 audit by Tim McLean](https://www.chosenplaintext.ca/publications/20161104-siv-mode-report.pdf) (Issues fixed with 1.1.0)
 
 ## Usage
 ```java
@@ -37,7 +41,7 @@ public void encryptWithAssociatedData() {
   <dependency>
     <groupId>org.cryptomator</groupId>
     <artifactId>siv-mode</artifactId>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
   </dependency>
 </dependencies>
 ```
