@@ -18,8 +18,6 @@ before_script:
 - mvn --update-snapshots dependency-check:check -Pdependency-check
 script:
 - mvn clean test jacoco:report verify -Pcoverage
-after_success:
-- "if [[ ${TRAVIS_JDK_VERSION} == 'openjdk7' ]]; then bash <(curl -s https://codecov.io/bash); fi"
 cache:
   directories:
   - $HOME/.m2
