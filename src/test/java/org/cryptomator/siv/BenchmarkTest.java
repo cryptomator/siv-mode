@@ -18,18 +18,22 @@ public class BenchmarkTest {
 
 	@Test
 	public void runBenchmarks() throws RunnerException {
-		// Taken from http://stackoverflow.com/a/30486197/4014509:
-		Options opt = new OptionsBuilder()
-				// Specify which benchmarks to run
-				.include(getClass().getPackage().getName() + ".*Benchmark.*")
-				// Set the following options as needed
-				.threads(2).forks(2) //
-				.shouldFailOnError(true).shouldDoGC(true)
-				// .jvmArgs("-XX:+UnlockDiagnosticVMOptions", "-XX:+PrintInlining")
-				// .addProfiler(WinPerfAsmProfiler.class)
-				.build();
+		if (System.getProperty("java.version").startsWith("1.8")) {
+			// Taken from http://stackoverflow.com/a/30486197/4014509:
+			Options opt = new OptionsBuilder()
+					// Specify which benchmarks to run
+					.include(getClass().getPackage().getName() + ".*Benchmark.*")
+					// Set the following options as needed
+					.threads(2).forks(2) //
+					.shouldFailOnError(true).shouldDoGC(true)
+					// .jvmArgs("-XX:+UnlockDiagnosticVMOptions", "-XX:+PrintInlining")
+					// .addProfiler(WinPerfAsmProfiler.class)
+					.build();
 
-		new Runner(opt).run();
+			new Runner(opt).run();
+		} else {
+			System.out.println("Skipping Benchmarks");
+		}
 	}
 
 }
