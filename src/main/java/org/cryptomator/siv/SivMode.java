@@ -114,33 +114,16 @@ public final class SivMode {
 	 * @throws IllegalArgumentException if the either of the two keys is of invalid length for the used {@link BlockCipher}.
 	 */
 	public byte[] encrypt(byte[] ctrKey, byte[] macKey, byte[] plaintext, byte[]... associatedData) {
-		final byte[] iv = s2v(macKey, plaintext, associatedData);
-
 		// Check if plaintext length will cause overflows
 		if (plaintext.length > (Integer.MAX_VALUE - 16)) {
 			throw new IllegalArgumentException("Plaintext is too long");
 		}
 
+		assert plaintext.length + 15 < Integer.MAX_VALUE;
 		final int numBlocks = (plaintext.length + 15) / 16;
-
-		// clear out the 31st and 63rd (rightmost) bit:
-		final byte[] ctr = Arrays.copyOf(iv, 16);
-		ctr[8] = (byte) (ctr[8] & 0x7F);
-		ctr[12] = (byte) (ctr[12] & 0x7F);
-		final ByteBuffer ctrBuf = ByteBuffer.wrap(ctr);
-		final long initialCtrVal = ctrBuf.getLong(8);
-
-		final byte[] x = new byte[numBlocks * 16];
-		final BlockCipher cipher = threadLocalCipher.get();
-		cipher.init(true, new KeyParameter(ctrKey));
-		for (int i = 0; i < numBlocks; i++) {
-			final long ctrVal = initialCtrVal + i;
-			ctrBuf.putLong(8, ctrVal);
-			cipher.processBlock(ctrBuf.array(), 0, x, i * 16);
-			cipher.reset();
-		}
-
-		final byte[] ciphertext = xor(plaintext, x);
+		final byte[] iv = s2v(macKey, plaintext, associatedData);
+		final byte[] keystream = generateKeyStream(ctrKey, iv, numBlocks);
+		final byte[] ciphertext = xor(plaintext, keystream);
 
 		// concat IV + ciphertext:
 		final byte[] result = new byte[iv.length + ciphertext.length];
@@ -195,28 +178,11 @@ public final class SivMode {
 		final byte[] iv = Arrays.copyOf(ciphertext, 16);
 		final byte[] actualCiphertext = Arrays.copyOfRange(ciphertext, 16, ciphertext.length);
 
-		// will not overflow because actualCiphertext.length == (ciphertext.length - 16)
+		assert actualCiphertext.length == ciphertext.length - 16;
+		assert actualCiphertext.length + 15 < Integer.MAX_VALUE;
 		final int numBlocks = (actualCiphertext.length + 15) / 16;
-
-		// clear out the 31st and 63rd (rightmost) bit:
-		final byte[] ctr = Arrays.copyOf(iv, 16);
-		ctr[8] = (byte) (ctr[8] & 0x7F);
-		ctr[12] = (byte) (ctr[12] & 0x7F);
-		final ByteBuffer ctrBuf = ByteBuffer.wrap(ctr);
-		final long initialCtrVal = ctrBuf.getLong(8);
-
-		final byte[] x = new byte[numBlocks * 16];
-		final BlockCipher cipher = threadLocalCipher.get();
-		cipher.init(true, new KeyParameter(ctrKey));
-		for (int i = 0; i < numBlocks; i++) {
-			final long ctrVal = initialCtrVal + i;
-			ctrBuf.putLong(8, ctrVal);
-			cipher.processBlock(ctrBuf.array(), 0, x, i * 16);
-			cipher.reset();
-		}
-
-		final byte[] plaintext = xor(actualCiphertext, x);
-
+		final byte[] keystream = generateKeyStream(ctrKey, iv, numBlocks);
+		final byte[] plaintext = xor(actualCiphertext, keystream);
 		final byte[] control = s2v(macKey, plaintext, associatedData);
 
 		// time-constant comparison (taken from MessageDigest.isEqual in JDK8)
@@ -231,6 +197,27 @@ public final class SivMode {
 		} else {
 			throw new UnauthenticCiphertextException("authentication in SIV decryption failed");
 		}
+	}
+
+	byte[] generateKeyStream(byte[] ctrKey, byte[] iv, int numBlocks) {
+		final byte[] keystream = new byte[numBlocks * 16];
+
+		// clear out the 31st and 63rd (rightmost) bit:
+		final byte[] ctr = Arrays.copyOf(iv, 16);
+		ctr[8] = (byte) (ctr[8] & 0x7F);
+		ctr[12] = (byte) (ctr[12] & 0x7F);
+		final ByteBuffer ctrBuf = ByteBuffer.wrap(ctr);
+		final long initialCtrVal = ctrBuf.getLong(8);
+
+		final BlockCipher cipher = threadLocalCipher.get();
+		cipher.init(true, new KeyParameter(ctrKey));
+		for (int i = 0; i < numBlocks; i++) {
+			ctrBuf.putLong(8, initialCtrVal + i);
+			cipher.processBlock(ctr, 0, keystream, i * 16);
+			cipher.reset();
+		}
+
+		return keystream;
 	}
 
 	// Visible for testing, throws IllegalArgumentException if key is not accepted by CMac#init(CipherParameters)
