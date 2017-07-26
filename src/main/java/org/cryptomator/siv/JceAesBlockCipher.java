@@ -24,12 +24,20 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 /**
  * Adapter class between BouncyCastle's {@link BlockCipher} and JCE's {@link Cipher} API.
+ * 
+ * <p>
+ * As per contract of {@link BlockCipher#processBlock(byte[], int, byte[], int)}, this class is designed to encrypt or decrypt just <b>one single block</b> at a time.
+ * JCE doesn't allow us to retrieve the plain cipher without a mode, so we explicitly request {@value #SINGLE_BLOCK_PLAIN_AES_JCE_CIPHER_NAME}.
+ * This is by design, because we want the plain cipher for a single 128 bit block without any mode. We're not actually using ECB mode.
+ * 
+ * <p>
+ * This is a package-private class only used to encrypt the 128 bit counter during SIV mode.
  */
-class JceAesBlockCipher implements BlockCipher {
+final class JceAesBlockCipher implements BlockCipher {
 
 	private static final String ALG_NAME = "AES";
 	private static final String KEY_DESIGNATION = "AES";
-	private static final String JCE_CIPHER_NAME = "AES/ECB/NoPadding";
+	private static final String SINGLE_BLOCK_PLAIN_AES_JCE_CIPHER_NAME = "AES/ECB/NoPadding";
 
 	private final Cipher cipher;
 	private Key key;
@@ -37,7 +45,7 @@ class JceAesBlockCipher implements BlockCipher {
 
 	public JceAesBlockCipher() {
 		try {
-			this.cipher = Cipher.getInstance(JCE_CIPHER_NAME); // defaults to SunJCE but allows to configure different providers
+			this.cipher = Cipher.getInstance(SINGLE_BLOCK_PLAIN_AES_JCE_CIPHER_NAME); // defaults to SunJCE but allows to configure different providers
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
 			throw new IllegalStateException("Every implementation of the Java platform is required to support AES/ECB/NoPadding.");
 		}
