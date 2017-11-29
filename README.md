@@ -18,6 +18,12 @@
 
 ## Audits
 - [Version 1.0.8 audit by Tim McLean](https://www.chosenplaintext.ca/publications/20161104-siv-mode-report.pdf) (Issues fixed with 1.1.0)
+- [Version 1.2.1 audit by Cure53](https://cryptomator.org/audits/2017-11-27%20crypto%20cure53.pdf)
+
+| Finding | Comment |
+|---|---|
+| 1u1-22-001 | The GPG key is used exclusively for the Maven repositories, is designed for signing only and is protected by a 30-character generated password (alphabet size: 96 chars). It is iterated and salted (SHA1 with 20971520 iterations). An offline attack is also very unattractive. Apart from that, this finding has no influence on the Tresor apps<sup>[1](#footnote-tresor-apps)</sup>. This was not known to Cure53 at the time of reporting. |
+| 1u1-22-002 | As per contract of `BlockCipher#processBlock(byte[], int, byte[], int)`, `JceAesBlockCipher` is designed to encrypt or decrypt just **one single block** at a time. JCE doesn't allow us to retrieve the plain cipher without a mode, so we explicitly request `AES/ECB/NoPadding`. This is by design, because we want the plain cipher for a single 128 bit block without any mode. We're not actually using ECB mode. |
 
 ## Usage
 ```java
@@ -48,3 +54,7 @@ public void encryptWithAssociatedData() {
 
 ## License
 Distributed under the MIT X Consortium license. See the LICENSE file for more info.
+
+---
+
+<sup><a name="footnote-tresor-apps">1</a></sup> The Cure53 pentesting was performed during the development of the apps for 1&1 Mail & Media GmbH.
