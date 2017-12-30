@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.bind.DatatypeConverter;
+import com.google.common.io.BaseEncoding;
 
 public class EncryptionTestCase {
 	private final byte[] ctrKey;
@@ -39,15 +39,15 @@ public class EncryptionTestCase {
 					// No more test cases
 					break;
 				}
-				byte[] ctrKey = DatatypeConverter.parseHexBinary(ctrKeyStr);
-				byte[] macKey = DatatypeConverter.parseHexBinary(reader.readLine());
-				byte[] plaintext = DatatypeConverter.parseHexBinary(reader.readLine());
+				byte[] ctrKey = BaseEncoding.base16().decode(ctrKeyStr.toUpperCase());
+				byte[] macKey = BaseEncoding.base16().decode(reader.readLine().toUpperCase());
+				byte[] plaintext = BaseEncoding.base16().decode(reader.readLine().toUpperCase());
 				int adCount = Integer.parseInt(reader.readLine());
 				byte[][] ad = new byte[adCount][];
 				for (int adIdx = 0; adIdx < adCount; adIdx++) {
-					ad[adIdx] = DatatypeConverter.parseHexBinary(reader.readLine());
+					ad[adIdx] = BaseEncoding.base16().decode(reader.readLine().toUpperCase());
 				}
-				byte[] ciphertext = DatatypeConverter.parseHexBinary(reader.readLine());
+				byte[] ciphertext = BaseEncoding.base16().decode(reader.readLine().toUpperCase());
 
 				String divider = reader.readLine();
 				if (!divider.equals("---")) {
