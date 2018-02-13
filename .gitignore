@@ -14,3 +14,10 @@ hs_err_pid*
 .settings
 .classpath
 .project
+
+# IntelliJ Settings Files #
+.idea/
+out/
+.idea_modules/
+*.iml
+*.iws

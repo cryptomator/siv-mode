@@ -84,8 +84,30 @@
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.7.0</version>
+				<executions>
+					<execution>
+						<id>default-compile</id>
+						<configuration>
+							<release>9</release>
+							<includes>
+								<include>module-info.java</include>
+							</includes>
+						</configuration>
+					</execution>
+					<execution>
+						<id>base-compile</id>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<configuration>
+							<excludes>
+								<exclude>module-info.java</exclude>
+							</excludes>
+						</configuration>
+					</execution>
+				</executions>
 				<configuration>
-					<source>1.7</source>
+					<source>9</source>
 					<target>1.7</target>
 					<release>7</release>
 					<encoding>UTF-8</encoding>
@@ -98,6 +120,7 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
+							<Multi-Release>true</Multi-Release>
 							<Sealed>true</Sealed>
 						</manifestEntries>
 					</archive>
@@ -117,6 +140,13 @@
 							<keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<createSourcesJar>false</createSourcesJar>
+							<transformers>
+								<!-- re-add module-info.class -->
+								<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+									<resource>module-info.class</resource>
+									<file>${project.build.outputDirectory}/module-info.class</file>
+								</transformer>
+							</transformers>
 							<artifactSet>
 								<includes>
 									<include>org.bouncycastle:bcprov-jdk15on</include>
