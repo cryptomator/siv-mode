@@ -120,7 +120,6 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Multi-Release>true</Multi-Release>
 							<Sealed>true</Sealed>
 						</manifestEntries>
 					</archive>
