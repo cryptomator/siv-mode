@@ -30,8 +30,9 @@ addons:
     notification_email: sebastian.stenzel@cryptomator.org
     build_command_prepend: "mvn clean"
     build_command: "mvn -DskipTests=true compile"
-    branch_pattern: master
+    branch_pattern: release.*
 before_deploy:
+- jdk_switcher use oraclejdk9
 - gpg --import 34C80F11.gpg
 deploy:
 - provider: script # SNAPSHOTS
@@ -39,13 +40,11 @@ deploy:
   skip_cleanup: true
   on:
     repo: cryptomator/siv-mode
-    branch: master
+    branch: develop
     condition: $TRAVIS_TAG = ''
-    jdk: openjdk7
 - provider: script # RELEASES
   script: mvn clean versions:set -DnewVersion=${TRAVIS_TAG} deploy -DskipTests -Prelease --settings settings.xml
   skip_cleanup: true
   on:
     repo: cryptomator/siv-mode
     tags: true
-    jdk: openjdk7
