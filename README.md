@@ -52,7 +52,7 @@ public void encryptWithAssociatedData() {
 </dependencies>
 ```
 
-## JMPS
+## JPMS
 
 From version 1.3.0 onwards this library is an explicit module with the name `org.cryptomator.siv`. You can use it by adding the following line to your `module-info.java`.
 
