@@ -47,10 +47,20 @@ public void encryptWithAssociatedData() {
   <dependency>
     <groupId>org.cryptomator</groupId>
     <artifactId>siv-mode</artifactId>
-    <version>1.2.1</version>
+    <version>1.3.0</version>
   </dependency>
 </dependencies>
 ```
+
+## JPMS
+
+From version 1.3.0 onwards this library is an explicit module with the name `org.cryptomator.siv`. You can use it by adding the following line to your `module-info.java`.
+
+```java
+requires org.cryptomator.siv;
+```
+
+Because BouncyCastle classes are shaded, this library only depends on `java.base`.
 
 ## License
 Distributed under the MIT X Consortium license. See the LICENSE file for more info.
