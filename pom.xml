@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.59</version>
+			<version>1.60</version>
 			<!-- see maven-shade-plugin; we don't want this as a transitive dependency in other projects -->
 			<optional>true</optional>
 		</dependency>
@@ -145,7 +145,7 @@
 			<plugin>
 				<groupId>org.moditect</groupId>
 					<artifactId>moditect-maven-plugin</artifactId>
-				<version>1.0.0.Alpha2</version>
+				<version>1.0.0.Beta1</version>
 				<executions>
 					<execution>
 						<id>add-module-infos</id>
@@ -155,12 +155,11 @@
 						</goals>
 						<configuration>
 							<module>
-								<moduleInfo>
-									<name>org.cryptomator.siv</name>
-									<exports>
-										org.cryptomator.siv;
-									</exports>
-								</moduleInfo>
+								<moduleInfoSource>
+									module org.cryptomator.siv {
+										exports org.cryptomator.siv;
+									}
+								</moduleInfoSource>
 							</module>
 						</configuration>
 					</execution>
