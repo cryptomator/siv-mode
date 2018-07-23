@@ -4,12 +4,10 @@ jdk:
 - oraclejdk9
 env:
   global:
-  - secure: gZBB5FXkBFbMwXP8CzREmg2GShlS1rE+OnrOAGoevrJdrCFUiw7GW1NYI0no31hUV0wy3vaqLOdvOoITyNm75xc1oRKaAN31CwDhhDCrJwyT/yJOWj/HLwxZIq4icIDrD5vKsUiyXVH/XXXmqvF76TlY1KdIBFicDtWWYLlz2XijoKInQpSbMa4ntpETb4daXTcz7bcjJ0N1hXTSlWnuxXRn4jdLKyn0ksPQ+8HxNKfCqkGumI1H0jB60eaKNGsG1dZwKrY5HnFzmYptPaYVlNutO17wjvKM5CJ8XdSiojymaMrgT6Tl6UzUnE5yfUp3QsWGaypYDX32Nt4qOS304/pmDA3uy+pUtoPhPWgaLf55KAKqsWrRsP32cqeBRpXrWEvP9V/9wYa7cchAAD5wApaJVQSbJVX8WzeMw+DgL8LQlg8y1KHh4POIY6Z5IZnVdKr9eElB2Ii2wTHJHaJZWK35PsXezAnOfsrkjm4PxtuhnogaH/g/M1l6+Zwdc5lptRlixRnOzI6W6mKux63hm9jW44kTWcVsG3J4cyjDno1uLDdJ6ra9qvnAgN398V3MUWZXPVmhOzM2l8HV0fJqGc57FPLa5Aeo3k10jqWTtA7hYcbk00GEqeMvD2ZeOdmTVGi/N25ZHNipNs3Z3abEhnBVAUq3eWBCGik2eeNIDm0= # MAVEN_GPG_PASSPHRASE
-  - secure: jJWZyFQHHjDoP9248Gc2lXrfvMZX2z/tCsEuCY/U1O+xheCyKjw/tIPvZamDJo88Zqr1pJ4m5cEvriuSRFF8s8+huvXN0v5dgRnmcZ+0+Pl+VnVTS/+MXsxRZBYwOsdk+2h7bF8eXZh0lV11JSNbo5e5fCzVWHNL5C5/Ko9uVdWa/Rqqoe8KRGAWbqSvvHCh2z37E8JvuLFEzWHOo4+BVlhWc4hydnnVU2ZmU4M1Az7ElLkUQLWIEip6CMV1r68ZiKLS2zhju8n3M5YM9iCAGFw1rgQX0p0B1eGMwmCNzsKR5vRAuHDrSZSWiaKTZucx+6y3kT0G1RBJ0r5VoyBXvB87lEXulhGx+dBmNGwcB17G8qnTFgnyNMLSmSKDmAvcZHt5eMs7yv1wXt3+aSLnAnCEv3QQ8wFr+aN3JWvYVfKcdTcxg/3hinui6rETU6I7hpS/Je5QyNd9bNmP7un6opBPS9plNMeav5hLmuFupAOpalxkhkZan8s8t++B6a2p0InchPp242T7E4BWfXaJHO9geaCZC/v3tMF2DhNwYRngZqo4v4gIOs+XVXHb9ZnIqmJZCz79FSL3q/M727aGURFShPZ2VpqAk7dIMNf0HvRqLa+Gn/SCWF1L7VBNqdhwZUES8WiBhY4d7nbezGc61S99JAgr9k8cGQAKk/m88I0= # MAVEN_OSSRH_USERNAME
-  - secure: CReylGttPV4AsNNvJhdrP4Hqc+k5k8n7rc8+ql7NX1aM9D0UkJzxBKvWBABRrmv8unaw04EWMO6fcB0TsajTU3aDt2nW6AXhhEKLlmiIKLzeMOQlixv8HeOLM1l7M5QbYb1F3grMA32nmw/V8MNu7AUO3x0s49I6HYEFelhDY+0dE5v3hgXnbHPdpDk+gt91t/wHUqnzqCTccfCz210X/VlPEjoV4qVg0OiVBBNLYcPBg7LBkOdv8X7ginnrUJM2dDzKmlUDfWMRlkwAoTcFjISsrEdGbcH2pOes1nq6G8yVeMhjeN5bjywCWD0X5hsyF3y1kxC3FXzVge+xbk1aNHoDjSrTw7RVIsLK4BUYYC9BrC2/3555SYAWRN4FTnIXOyyM0Vu8fr/C+9C9QIJfFl40rwsB359GMGwjF4eTIFlrKqC4AUXCk0iNYXJyVcKoHdLoyRMn3fdZzeP5fY2F1SujGLIoEOyRmdZX+WC+obdN6jO0FccKtPWfeSoUwVkI2NOLTZ1G+sykd2A109WJIYjopc11g/HgGOks8AHiWLLFrt3Fy93wLRvfnwkIkSSMYpN6xp6Mnay53oqm7UzTmYuXI7D6IfoY63suQZHC1XYwxjfNlUBIZ+CgSsBaisStFUs8lr0+HUbFZqUE3Iv2KctZVMlfRBvFASTCWVRZo8c= # MAVEN_OSSRH_PASSWORD
-  - secure: "cPCXRHx79m0MXE8/3/WXpwUyUwZkTMCpGgIrV2VryGpl6+47kRgHWHUWJ/4Duj/hWrH+VyQ/NheAjwwX90Czu3m+InnoQv7lZO4drH+kd0xP4z6sPolbJkIMyjXGxuIccPV7fntw2NtHHezESYhu3HwH9opqwvMbk4FPIdnWMLXVJ3lP2ohfb0HSoYNMVYH0A7EYn4w5WUq79qZ1vdjmVvavcwSt/f6Fqb7VMshJnJEZN84l+n68l1uaVrJuTW0RkMA1sV4H2O3qIpEy2K8Od9APPyh5pjVHLij+qKC7tArrw5MDyZB0ptC92kefP/Hq/pxN24ZF3Tzz1FxwwS+oQ4BO7POMQ1lKQSFMrlPIBMDan1YuHH0tWiajyRi7ndS7VcFDRJ3hzNRielpd24wNuMeMT2rk0qB/8nxZeeR8vOL1SYI+UfNW483VVE5HKxy0H9skUt1bUtWWUd7NhMmR0JYRNnU3sN6zWBsK81BWvewdqGbMn5z8IvUTn8rbyPiS4US9BTk1T64aaqutrpeztL+WJN5jdpqmLbxoS9oSVIfbDh/5N982BOhNVCfwUfEJwhGzdAeY0Z/CtCd1yFq7bmBlSoCiy4UL9eS8fJ2H6a6sQX5kAL1l+3WkgST4KzjLlW04L+QUHkpGK+rNLFwD/p+gzq0PKrguZynKevCq8Tw=" #COVERITY_SCAN_TOKEN
-  - secure: "dYjMF9qjmv85TdhSauKTfU+5Lt7q1ZpOLfpYuRz1yQF3Y+Ru/5/2Ucb4efgzLNRE4u9KGM7MJr1YRH3qV5OyxBqfKZ9ORq5noQbukfKyDDjS7oRn1HiHWG5ZWs2Ja35z0a5BK8+h5OF8kA1C5dmQ/tePKP5JAZZlhwnBolkwUXTJXAvppSBpl2/m/0KBJoHMJYxiY4DJ8grf3OWWhsWO9YMeJAov+N4GFJy9J85tbKvb4XgJITBPrSmK981JS67sddjelaodaolF5vewoW7KfxG87SMRr6xOno0Qy1td2aiUXMt10w2eI2FTluC9Fp0UJ7z3rMEGcHGFjaPXk+bLOAwGwoJq3xt3mA91Y7N1aQuOnWL01K94c7rw9yUU+HUfrUz1iPVEFD36FkwZNFYXHPL8JMuSL6bIafaiu5Nd95QZP7vET3It07zBc/KcV2izdk9aXOOPumKmw/VpzunWfYF2we53uuN1tvzBJ5yxuHjsoteTkbdoYpIinAHI3QfREwwRX19Q4jjJU9GTT12n/7GQopXzuytK6M6xlltVVD/KffmdyiqqWA1u391t2HcgmX6TyvHS4jNy9hbJ+/zfqwZG+NQFSPz99LAiGpLYmctY3A5oofM16x07Tofk/HvbCMCjuMsk0zLgd1m915TFJ5ZUQ510ohrM5IBSdUJ6NUc=" #CODACY_PROJECT_TOKEN
+  - secure: "dYjMF9qjmv85TdhSauKTfU+5Lt7q1ZpOLfpYuRz1yQF3Y+Ru/5/2Ucb4efgzLNRE4u9KGM7MJr1YRH3qV5OyxBqfKZ9ORq5noQbukfKyDDjS7oRn1HiHWG5ZWs2Ja35z0a5BK8+h5OF8kA1C5dmQ/tePKP5JAZZlhwnBolkwUXTJXAvppSBpl2/m/0KBJoHMJYxiY4DJ8grf3OWWhsWO9YMeJAov+N4GFJy9J85tbKvb4XgJITBPrSmK981JS67sddjelaodaolF5vewoW7KfxG87SMRr6xOno0Qy1td2aiUXMt10w2eI2FTluC9Fp0UJ7z3rMEGcHGFjaPXk+bLOAwGwoJq3xt3mA91Y7N1aQuOnWL01K94c7rw9yUU+HUfrUz1iPVEFD36FkwZNFYXHPL8JMuSL6bIafaiu5Nd95QZP7vET3It07zBc/KcV2izdk9aXOOPumKmw/VpzunWfYF2we53uuN1tvzBJ5yxuHjsoteTkbdoYpIinAHI3QfREwwRX19Q4jjJU9GTT12n/7GQopXzuytK6M6xlltVVD/KffmdyiqqWA1u391t2HcgmX6TyvHS4jNy9hbJ+/zfqwZG+NQFSPz99LAiGpLYmctY3A5oofM16x07Tofk/HvbCMCjuMsk0zLgd1m915TFJ5ZUQ510ohrM5IBSdUJ6NUc=" # CODACY_PROJECT_TOKEN
+  - secure: "PQ/K3HeqG52aDOel6ROp8vJo1ybfnwjdYKewKssWQwsb38BIPe68RKgJ06mOeyacrf+i1BkJgKspTcwLeMqfRNP+mxAg3WBccG6dwZy3LdeaRBrcGQhiBLgK8RthIFxOPoY4pm2iiUQdcakWXHIqz62asV8Hx9Yk8qyyIch+kj4uEE2bgyJGKb3MM56kPmjOSZIuD+hR3V/RqBBgpKrDsfkEGH5kZSfLlt9oy5tsJsAzlY4cYFq3RBy4KZQUifRXh6i7MHWOSt48E1Qt7hwik0pSchS7AqMAvu3tCstc+hUGavpq/XXqlqH8kWjplpVJQsQ5YUcacDWFxuFpfPTBbFJKITEQrEoXlSNOXMTIzaBdn8CZtCoeIonHMXkAaOncVmEIjFQbOl0XzDNz6GXmUYCoUcWeBhq4rBcFqq844VIUaRbmD+eQR7zDx2B5WcKGt/h273iK7rCBQB3dEOhhab2rliES8FmUKj1U/k50Ae7oVrlnPm6fJH7tCsEKEEgPrvlLEzOtFpqrOeQZ91B+wkopw4d+z+24OBgVpk4Plv6G+CBHU61ixwOJ9MJFEPeZ/2gNWmZkGItS6L0eMqK+SvMYzZETrreceLFWRSzmpRKbWilmauBLKzFNnf9+Emu+XD0boC/oQGwyYGi4Cm1HmSAInGXfvwaDh7d5RHAbh0A=" # BINTRAY_API_KEY
 install:
+- curl -o $HOME/.m2/settings.xml https://gist.githubusercontent.com/cryptobot/cf5fbd909c4782aaeeeb7c7f4a1a43da/raw/e60ee486e34ee0c79f89f947abe2c83b4290c6bb/settings.xml
 - mvn dependency:go-offline -Pdependency-check,coverage,release
 before_script:
 - mvn --update-snapshots dependency-check:check -Pdependency-check
@@ -17,34 +15,26 @@ script:
 - mvn clean test jacoco:report verify -Pcoverage
 after_success:
 - jdk_switcher use oraclejdk8
-- curl -o ~/codacy-coverage-reporter-assembly-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/2.0.1/codacy-coverage-reporter-2.0.1-assembly.jar
-- $JAVA_HOME/bin/java -cp ~/codacy-coverage-reporter-assembly-latest.jar com.codacy.CodacyCoverageReporter -l Java -r target/site/jacoco/jacoco.xml
+- curl -o ~/codacy-coverage-reporter-assembly-latest.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.1/codacy-coverage-reporter-4.0.1-assembly.jar
+- $JAVA_HOME/bin/java -jar ~/codacy-coverage-reporter-assembly-latest.jar report -l Java -r target/site/jacoco/jacoco.xml
 cache:
   directories:
   - $HOME/.m2
-addons:
-  coverity_scan:
-    project:
-      name: "cryptomator/siv-mode"
-      description: "Build submitted via Travis CI"
-    notification_email: sebastian.stenzel@cryptomator.org
-    build_command_prepend: "mvn clean"
-    build_command: "mvn -DskipTests=true compile"
-    branch_pattern: release.*
 before_deploy:
 - jdk_switcher use oraclejdk9
-- gpg --import 34C80F11.gpg
 deploy:
 - provider: script # SNAPSHOTS
-  script: mvn clean deploy -DskipTests -Prelease --settings settings.xml
+  script: mvn clean deploy -DskipTests -Prelease
   skip_cleanup: true
   on:
     repo: cryptomator/siv-mode
     branch: develop
     condition: $TRAVIS_TAG = ''
 - provider: script # RELEASES
-  script: mvn clean versions:set -DnewVersion=${TRAVIS_TAG} deploy -DskipTests -Prelease --settings settings.xml
+  script: mvn clean versions:set -DnewVersion=${TRAVIS_TAG} deploy -DskipTests -Prelease
   skip_cleanup: true
   on:
     repo: cryptomator/siv-mode
     tags: true
+after_deploy:
+  - "echo '{\"close\": \"1\"}' | curl -v -X POST -u cryptobot:${BINTRAY_API_KEY} https://api.bintray.com/maven_central_sync/cryptomator/maven/siv-mode/versions/${TRAVIS_TAG}"

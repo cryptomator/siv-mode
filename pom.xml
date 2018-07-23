@@ -228,13 +228,9 @@
 		<profile>
 			<id>release</id>
 			<distributionManagement>
-				<snapshotRepository>
-					<id>ossrh</id>
-					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-				</snapshotRepository>
 				<repository>
-					<id>ossrh</id>
-					<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+					<id>bintray-jcenter</id>
+					<url>https://api.bintray.com/maven/cryptomator/maven/siv-mode/;publish=1</url>
 				</repository>
 			</distributionManagement>
 			<build>
@@ -259,19 +255,6 @@
 								<id>attach-javadocs</id>
 								<goals>
 									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.6</version>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
 								</goals>
 							</execution>
 						</executions>
