@@ -3,7 +3,7 @@ package org.cryptomator.siv;
  * Copyright (c) 2016 Sebastian Stenzel
  * This file is licensed under the terms of the MIT license.
  * See the LICENSE.txt file for more info.
- * 
+ *
  * Contributors:
  *     Sebastian Stenzel - initial API and implementation
  ******************************************************************************/
@@ -15,6 +15,9 @@ import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.security.Provider;
+import java.security.Security;
 
 public class JceAesBlockCipherTest {
 
@@ -52,12 +55,30 @@ public class JceAesBlockCipherTest {
 	}
 
 	@Test
+	public void testInitForEncryptionWithProvider() {
+        JceAesBlockCipher cipher = new JceAesBlockCipher(getSunJceProvider());
+		cipher.init(true, new KeyParameter(new byte[16]));
+	}
+
+	@Test
 	public void testInitForDecryption() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
 		cipher.init(false, new KeyParameter(new byte[16]));
 	}
 
 	@Test
+	public void testInitForDecryptionWithProvider() {
+        JceAesBlockCipher cipher = new JceAesBlockCipher(getSunJceProvider());
+		cipher.init(false, new KeyParameter(new byte[16]));
+	}
+
+    private Provider getSunJceProvider() {
+        Provider provider = Security.getProvider("SunJCE");
+        Assert.assertNotNull(provider);
+        return provider;
+    }
+
+    @Test
 	public void testGetAlgorithmName() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
 		Assert.assertEquals("AES", cipher.getAlgorithmName());
@@ -77,7 +98,7 @@ public class JceAesBlockCipherTest {
 	}
 
 	@Test
-	public void testProcessBlockWithUnsufficientInput() {
+	public void testProcessBlockWithInsufficientInput() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
 		cipher.init(true, new KeyParameter(new byte[16]));
 		thrown.expect(DataLengthException.class);
@@ -86,7 +107,7 @@ public class JceAesBlockCipherTest {
 	}
 
 	@Test
-	public void testProcessBlockWithUnsufficientOutput() {
+	public void testProcessBlockWithInsufficientOutput() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
 		cipher.init(true, new KeyParameter(new byte[16]));
 		thrown.expect(DataLengthException.class);
@@ -96,20 +117,28 @@ public class JceAesBlockCipherTest {
 
 	@Test
 	public void testProcessBlock() {
-		JceAesBlockCipher cipher = new JceAesBlockCipher();
-		cipher.init(true, new KeyParameter(new byte[16]));
-		byte[] ciphertext = new byte[16];
-		int encrypted = cipher.processBlock(new byte[20], 0, ciphertext, 0);
-		Assert.assertEquals(16, encrypted);
+        testProcessBlock(new JceAesBlockCipher());
+    }
 
-		cipher.init(false, new KeyParameter(new byte[16]));
-		byte[] cleartext = new byte[16];
-		int decrypted = cipher.processBlock(ciphertext, 0, cleartext, 0);
-		Assert.assertEquals(16, decrypted);
-		Assert.assertArrayEquals(new byte[16], cleartext);
-	}
+    @Test
+    public void testProcessBlockWithProvider() {
+        testProcessBlock(new JceAesBlockCipher(getSunJceProvider()));
+    }
 
-	@Test
+    private void testProcessBlock(JceAesBlockCipher cipher) {
+        cipher.init(true, new KeyParameter(new byte[16]));
+        byte[] ciphertext = new byte[16];
+        int encrypted = cipher.processBlock(new byte[20], 0, ciphertext, 0);
+        Assert.assertEquals(16, encrypted);
+
+        cipher.init(false, new KeyParameter(new byte[16]));
+        byte[] cleartext = new byte[16];
+        int decrypted = cipher.processBlock(ciphertext, 0, cleartext, 0);
+        Assert.assertEquals(16, decrypted);
+        Assert.assertArrayEquals(new byte[16], cleartext);
+    }
+
+    @Test
 	public void testResetBeforeInitDoesNotThrowExceptions() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
 		cipher.reset();
