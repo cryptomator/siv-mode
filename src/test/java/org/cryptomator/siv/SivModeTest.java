@@ -10,6 +10,8 @@ package org.cryptomator.siv;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.security.Provider;
+import java.security.Security;
 
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
@@ -141,6 +143,9 @@ public class SivModeTest {
 
 		final byte[] result = new SivMode().generateKeyStream(ctrKey, ctr, 1);
 		Assert.assertArrayEquals(expected, result);
+
+		final byte[] resultProvider = new SivMode(getSunJceProvider()).generateKeyStream(ctrKey, ctr, 1);
+		Assert.assertArrayEquals(expected, resultProvider);
 	}
 
 	// CTR-AES https://tools.ietf.org/html/rfc5297#appendix-A.2
@@ -199,6 +204,9 @@ public class SivModeTest {
 
 		final byte[] result = new SivMode().s2v(macKey, plaintext, ad);
 		Assert.assertArrayEquals(expected, result);
+
+		final byte[] resultProvider = new SivMode(getSunJceProvider()).s2v(macKey, plaintext, ad);
+		Assert.assertArrayEquals(expected, resultProvider);
 	}
 
 	@Test
@@ -584,4 +592,9 @@ public class SivModeTest {
 		}
 	}
 
+	private Provider getSunJceProvider() {
+		Provider provider = Security.getProvider("SunJCE");
+		Assert.assertNotNull(provider);
+		return provider;
+	}
 }

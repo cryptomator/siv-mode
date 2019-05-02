@@ -9,6 +9,7 @@ package org.cryptomator.siv;
  ******************************************************************************/
 
 import java.nio.ByteBuffer;
+import java.security.Provider;
 import java.util.Arrays;
 
 import javax.crypto.IllegalBlockSizeException;
@@ -40,11 +41,24 @@ public final class SivMode {
 	 * @see #SivMode(BlockCipherFactory)
 	 */
 	public SivMode() {
+		this((Provider) null);
+	}
+
+	/**
+	 * Creates an AES-SIV instance using a custom JCE's security provider<br>
+	 *
+	 * For embedded systems, you might want to consider using {@link #SivMode(BlockCipherFactory)} with {@link AESLightEngine} instead.
+	 *
+	 * @param jceSecurityProvider to use to create the internal {@link javax.crypto.Cipher} instance
+	 *
+	 * @see #SivMode(BlockCipherFactory)
+	 */
+	public SivMode(final Provider jceSecurityProvider) {
 		this(new BlockCipherFactory() {
 
 			@Override
 			public BlockCipher create() {
-				return new JceAesBlockCipher();
+				return new JceAesBlockCipher(jceSecurityProvider);
 			}
 
 		});
