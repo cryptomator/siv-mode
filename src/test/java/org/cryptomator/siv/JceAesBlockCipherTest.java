@@ -11,41 +11,41 @@ package org.cryptomator.siv;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.security.Provider;
 import java.security.Security;
 
 public class JceAesBlockCipherTest {
 
-	@Rule
-	public final ExpectedException thrown = ExpectedException.none();
-
 	@Test
 	public void testInitWithNullParam() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
-		thrown.expect(IllegalArgumentException.class);
-		thrown.expectMessage("missing parameter of type KeyParameter");
-		cipher.init(true, null);
+		IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			cipher.init(true, null);
+		});
+		MatcherAssert.assertThat(e.getMessage(), CoreMatchers.containsString("missing parameter of type KeyParameter"));
 	}
 
 	@Test
 	public void testInitWithMissingKey() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
-		thrown.expect(IllegalArgumentException.class);
-		thrown.expectMessage("missing parameter of type KeyParameter");
-		cipher.init(true, new AsymmetricKeyParameter(true));
+		IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			cipher.init(true, new AsymmetricKeyParameter(true));
+		});
+		MatcherAssert.assertThat(e.getMessage(), CoreMatchers.containsString("missing parameter of type KeyParameter"));
 	}
 
 	@Test
 	public void testInitWithInvalidKey() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
-		thrown.expect(IllegalArgumentException.class);
-		thrown.expectMessage("Invalid key");
-		cipher.init(true, new KeyParameter(new byte[7]));
+		IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			cipher.init(true, new KeyParameter(new byte[7]));
+		});
+		MatcherAssert.assertThat(e.getMessage(), CoreMatchers.containsString("Invalid key"));
 	}
 
 	@Test
@@ -74,45 +74,48 @@ public class JceAesBlockCipherTest {
 
     private Provider getSunJceProvider() {
         Provider provider = Security.getProvider("SunJCE");
-        Assert.assertNotNull(provider);
+        Assertions.assertNotNull(provider);
         return provider;
     }
 
     @Test
 	public void testGetAlgorithmName() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
-		Assert.assertEquals("AES", cipher.getAlgorithmName());
+		Assertions.assertEquals("AES", cipher.getAlgorithmName());
 	}
 
 	@Test
 	public void testGetBlockSize() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
-		Assert.assertEquals(16, cipher.getBlockSize());
+		Assertions.assertEquals(16, cipher.getBlockSize());
 	}
 
 	@Test
 	public void testProcessBlockWithUninitializedCipher() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
-		thrown.expect(IllegalStateException.class);
-		cipher.processBlock(new byte[16], 0, new byte[16], 0);
+		Assertions.assertThrows(IllegalStateException.class, () -> {
+			cipher.processBlock(new byte[16], 0, new byte[16], 0);
+		});
 	}
 
 	@Test
 	public void testProcessBlockWithInsufficientInput() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
 		cipher.init(true, new KeyParameter(new byte[16]));
-		thrown.expect(DataLengthException.class);
-		thrown.expectMessage("Insufficient data in 'in'");
-		cipher.processBlock(new byte[16], 1, new byte[16], 0);
+		DataLengthException e = Assertions.assertThrows(DataLengthException.class, () -> {
+			cipher.processBlock(new byte[16], 1, new byte[16], 0);
+		});
+		MatcherAssert.assertThat(e.getMessage(), CoreMatchers.containsString("Insufficient data in 'in'"));
 	}
 
 	@Test
 	public void testProcessBlockWithInsufficientOutput() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
 		cipher.init(true, new KeyParameter(new byte[16]));
-		thrown.expect(DataLengthException.class);
-		thrown.expectMessage("Insufficient space in 'out'");
-		cipher.processBlock(new byte[16], 0, new byte[16], 1);
+		DataLengthException e = Assertions.assertThrows(DataLengthException.class, () -> {
+			cipher.processBlock(new byte[16], 0, new byte[16], 1);
+		});
+		MatcherAssert.assertThat(e.getMessage(), CoreMatchers.containsString("Insufficient space in 'out'"));
 	}
 
 	@Test
@@ -129,13 +132,13 @@ public class JceAesBlockCipherTest {
         cipher.init(true, new KeyParameter(new byte[16]));
         byte[] ciphertext = new byte[16];
         int encrypted = cipher.processBlock(new byte[20], 0, ciphertext, 0);
-        Assert.assertEquals(16, encrypted);
+        Assertions.assertEquals(16, encrypted);
 
         cipher.init(false, new KeyParameter(new byte[16]));
         byte[] cleartext = new byte[16];
         int decrypted = cipher.processBlock(ciphertext, 0, cleartext, 0);
-        Assert.assertEquals(16, decrypted);
-        Assert.assertArrayEquals(new byte[16], cleartext);
+        Assertions.assertEquals(16, decrypted);
+        Assertions.assertArrayEquals(new byte[16], cleartext);
     }
 
     @Test

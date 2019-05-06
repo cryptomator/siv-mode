@@ -48,15 +48,21 @@
 
 		<!-- Tests -->
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.12</version>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.4.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>2.27.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest</artifactId>
+			<version>2.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -109,6 +115,7 @@
 					<release>7</release>
 					<source>1.7</source> <!-- redundant to <release> but needed until https://bugs.openjdk.java.net/browse/JDK-8219474 is fixed (see javadoc config) -->
 					<target>1.7</target>
+					<testRelease>8</testRelease>
 					<encoding>UTF-8</encoding>
 					<showWarnings>true</showWarnings>
 				</configuration>
@@ -195,6 +202,31 @@
 	</build>
 
 	<profiles>
+		<profile>
+			<id>intellij</id>
+			<!-- workaround for intellij bug: https://youtrack.jetbrains.com/issue/IDEA-85478 -->
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>idea.maven.embedder.version</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>3.8.1</version>
+						<configuration>
+							<release>8</release>
+							<source>1.8</source>
+							<target>1.8</target>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
 		<profile>
 			<id>dependency-check</id>
 			<build>

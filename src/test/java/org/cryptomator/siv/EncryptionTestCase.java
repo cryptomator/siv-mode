@@ -1,5 +1,8 @@
 package org.cryptomator.siv;
 
+import com.google.common.base.Splitter;
+import com.google.common.io.BaseEncoding;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,17 +10,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import com.google.common.io.BaseEncoding;
+import java.util.Optional;
 
 public class EncryptionTestCase {
+
+	private static int TESTCASE_CTR = 0;
+
+	private final int testCaseNumber;
 	private final byte[] ctrKey;
 	private final byte[] macKey;
 	private final byte[] plaintext;
 	private final byte[][] additionalData;
 	private final byte[] ciphertext;
 
-	public EncryptionTestCase(byte[] ctrKey, byte[] macKey, byte[] plaintext, byte[][] additionalData, byte[] ciphertext) {
+	public EncryptionTestCase(int testCaseNumber, byte[] ctrKey, byte[] macKey, byte[] plaintext, byte[][] additionalData, byte[] ciphertext) {
+		this.testCaseNumber = testCaseNumber;
 		this.ctrKey = ctrKey;
 		this.macKey = macKey;
 		this.plaintext = plaintext;
@@ -25,42 +32,22 @@ public class EncryptionTestCase {
 		this.ciphertext = ciphertext;
 	}
 
-	// Read and parse the test cases generated with `siv-test-vectors.go`
-	public static EncryptionTestCase[] readTestCases() throws IOException {
-		// testcases.txt should contain an output from `siv-test-vectors.go`
-		BufferedReader reader = new BufferedReader(new InputStreamReader(EncryptionTestCase.class.getResourceAsStream("/testcases.txt"), StandardCharsets.US_ASCII));
-
-		try {
-			List<EncryptionTestCase> result = new ArrayList<EncryptionTestCase>();
-
-			for (;;) {
-				String ctrKeyStr = reader.readLine();
-				if (ctrKeyStr == null) {
-					// No more test cases
-					break;
-				}
-				byte[] ctrKey = BaseEncoding.base16().decode(ctrKeyStr.toUpperCase());
-				byte[] macKey = BaseEncoding.base16().decode(reader.readLine().toUpperCase());
-				byte[] plaintext = BaseEncoding.base16().decode(reader.readLine().toUpperCase());
-				int adCount = Integer.parseInt(reader.readLine());
-				byte[][] ad = new byte[adCount][];
-				for (int adIdx = 0; adIdx < adCount; adIdx++) {
-					ad[adIdx] = BaseEncoding.base16().decode(reader.readLine().toUpperCase());
-				}
-				byte[] ciphertext = BaseEncoding.base16().decode(reader.readLine().toUpperCase());
-
-				String divider = reader.readLine();
-				if (!divider.equals("---")) {
-					throw new IllegalStateException("expected test case divider but found: " + divider);
-				}
-
-				result.add(new EncryptionTestCase(ctrKey, macKey, plaintext, ad, ciphertext));
-			}
-
-			return result.toArray(new EncryptionTestCase[result.size()]);
-		} finally {
-			reader.close();
+	public static EncryptionTestCase fromLine(String line) {
+		List<String> fields = Splitter.on(';').splitToList(line);
+		byte[] ctrKey = BaseEncoding.base16().decode(fields.get(0).toUpperCase());
+		byte[] macKey = BaseEncoding.base16().decode(fields.get(1).toUpperCase());
+		byte[] plaintext = BaseEncoding.base16().decode(fields.get(2).toUpperCase());
+		int adCount = Integer.parseInt(fields.get(3));
+		byte[][] ad = new byte[adCount][];
+		for (int adIdx = 0; adIdx < adCount; adIdx++) {
+			ad[adIdx] = BaseEncoding.base16().decode(fields.get(4+adIdx).toUpperCase());
 		}
+		byte[] ciphertext = BaseEncoding.base16().decode(fields.get(4+adCount).toUpperCase());
+		return new EncryptionTestCase(TESTCASE_CTR++, ctrKey, macKey, plaintext, ad, ciphertext);
+	}
+
+	public int getTestCaseNumber() {
+		return testCaseNumber;
 	}
 
 	public byte[] getCtrKey() {

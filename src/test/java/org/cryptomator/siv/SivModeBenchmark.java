@@ -8,16 +8,11 @@
  ******************************************************************************/
 package org.cryptomator.siv;
 
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
-import javax.crypto.IllegalBlockSizeException;
-
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.engines.AESFastEngine;
 import org.bouncycastle.crypto.engines.AESLightEngine;
 import org.cryptomator.siv.SivMode.BlockCipherFactory;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Level;
@@ -29,6 +24,10 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
+
+import javax.crypto.IllegalBlockSizeException;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Needs to be compiled via maven as the JMH annotation processor needs to do stuff...
@@ -78,7 +77,7 @@ public class SivModeBenchmark {
 	public void benchmarkJce(Blackhole bh) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		byte[] encrypted = jceSivMode.encrypt(encKey, macKey, cleartextData, associatedData);
 		byte[] decrypted = jceSivMode.decrypt(encKey, macKey, encrypted, associatedData);
-		Assert.assertArrayEquals(cleartextData, decrypted);
+		Assertions.assertArrayEquals(cleartextData, decrypted);
 		bh.consume(encrypted);
 		bh.consume(decrypted);
 	}
@@ -87,7 +86,7 @@ public class SivModeBenchmark {
 	public void benchmarkBcFast(Blackhole bh) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		byte[] encrypted = bcFastSivMode.encrypt(encKey, macKey, cleartextData, associatedData);
 		byte[] decrypted = bcFastSivMode.decrypt(encKey, macKey, encrypted, associatedData);
-		Assert.assertArrayEquals(cleartextData, decrypted);
+		Assertions.assertArrayEquals(cleartextData, decrypted);
 		bh.consume(encrypted);
 		bh.consume(decrypted);
 	}
@@ -96,7 +95,7 @@ public class SivModeBenchmark {
 	public void benchmarkBcLight(Blackhole bh) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		byte[] encrypted = bcLightSivMode.encrypt(encKey, macKey, cleartextData, associatedData);
 		byte[] decrypted = bcLightSivMode.decrypt(encKey, macKey, encrypted, associatedData);
-		Assert.assertArrayEquals(cleartextData, decrypted);
+		Assertions.assertArrayEquals(cleartextData, decrypted);
 		bh.consume(encrypted);
 		bh.consume(decrypted);
 	}
