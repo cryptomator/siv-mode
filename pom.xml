@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.60</version>
+			<version>1.61</version>
 			<!-- see maven-shade-plugin; we don't want this as a transitive dependency in other projects -->
 			<optional>true</optional>
 		</dependency>
@@ -56,25 +56,25 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>2.16.0</version>
+			<version>2.27.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>24.0-jre</version>
+			<version>27.1-jre</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.openjdk.jmh</groupId>
 			<artifactId>jmh-core</artifactId>
-			<version>1.20</version>
+			<version>1.21</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.openjdk.jmh</groupId>
 			<artifactId>jmh-generator-annprocess</artifactId>
-			<version>1.20</version>
+			<version>1.21</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -83,18 +83,21 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.7.0</version>
+				<version>3.8.1</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
 					<release>7</release>
 					<encoding>UTF-8</encoding>
 					<showWarnings>true</showWarnings>
 				</configuration>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.2</version>
+			</plugin>
+			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.0.2</version>
+				<version>3.1.1</version>
 				<configuration>
 					<archive>
 						<manifestEntries>
@@ -105,7 +108,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>3.2.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -145,7 +148,7 @@
 			<plugin>
 				<groupId>org.moditect</groupId>
 					<artifactId>moditect-maven-plugin</artifactId>
-				<version>1.0.0.Beta1</version>
+				<version>1.0.0.Beta2</version>
 				<executions>
 					<execution>
 						<id>add-module-infos</id>
@@ -176,7 +179,7 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>3.1.1</version>
+						<version>4.0.2</version>
 						<configuration>
 							<cveValidForHours>24</cveValidForHours>
 							<failBuildOnCVSS>0</failBuildOnCVSS>
@@ -200,7 +203,7 @@
 					<plugin>
 						<groupId>org.jacoco</groupId>
 						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>0.8.0</version>
+						<version>0.8.3</version>
 						<executions>
 							<execution>
 								<id>prepare-agent</id>
@@ -238,7 +241,7 @@
 					</plugin>
 					<plugin>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>3.0.0</version>
+						<version>3.1.0</version>
 						<executions>
 							<execution>
 								<id>attach-javadocs</id>
