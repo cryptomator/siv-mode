@@ -89,7 +89,7 @@ public final class SivMode {
 	/**
 	 * Creates {@link BlockCipher}s.
 	 */
-	public static interface BlockCipherFactory {
+	public interface BlockCipherFactory {
 		BlockCipher create();
 	}
 
