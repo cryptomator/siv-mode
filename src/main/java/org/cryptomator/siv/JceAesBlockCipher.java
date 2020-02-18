@@ -3,7 +3,7 @@ package org.cryptomator.siv;
  * Copyright (c) 2016 Sebastian Stenzel
  * This file is licensed under the terms of the MIT license.
  * See the LICENSE.txt file for more info.
- * 
+ *
  * Contributors:
  *     Sebastian Stenzel - initial API and implementation
  ******************************************************************************/
@@ -11,6 +11,7 @@ package org.cryptomator.siv;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
 
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
@@ -24,12 +25,12 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 /**
  * Adapter class between BouncyCastle's {@link BlockCipher} and JCE's {@link Cipher} API.
- * 
+ *
  * <p>
  * As per contract of {@link BlockCipher#processBlock(byte[], int, byte[], int)}, this class is designed to encrypt or decrypt just <b>one single block</b> at a time.
  * JCE doesn't allow us to retrieve the plain cipher without a mode, so we explicitly request {@value #SINGLE_BLOCK_PLAIN_AES_JCE_CIPHER_NAME}.
  * This is by design, because we want the plain cipher for a single 128 bit block without any mode. We're not actually using ECB mode.
- * 
+ *
  * <p>
  * This is a package-private class only used to encrypt the 128 bit counter during SIV mode.
  */
@@ -43,9 +44,17 @@ final class JceAesBlockCipher implements BlockCipher {
 	private Key key;
 	private int opmode;
 
-	public JceAesBlockCipher() {
+	JceAesBlockCipher() {
+        this(null);
+    }
+
+	JceAesBlockCipher(Provider provider) {
 		try {
-			this.cipher = Cipher.getInstance(SINGLE_BLOCK_PLAIN_AES_JCE_CIPHER_NAME); // defaults to SunJCE but allows to configure different providers
+			if(provider != null) {
+				this.cipher = Cipher.getInstance(SINGLE_BLOCK_PLAIN_AES_JCE_CIPHER_NAME, provider);
+			} else {
+				this.cipher = Cipher.getInstance(SINGLE_BLOCK_PLAIN_AES_JCE_CIPHER_NAME); // defaults to SunJCE
+			}
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
 			throw new IllegalStateException("Every implementation of the Java platform is required to support AES/ECB/NoPadding.");
 		}

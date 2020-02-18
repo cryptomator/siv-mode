@@ -8,117 +8,142 @@ package org.cryptomator.siv;
  *     Sebastian Stenzel - initial API and implementation
  ******************************************************************************/
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
+import org.bouncycastle.crypto.engines.DESEngine;
+import org.cryptomator.siv.SivMode.BlockCipherFactory;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DynamicContainer;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
+import org.mockito.Mockito;
 
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
-import org.bouncycastle.crypto.BlockCipher;
-import org.bouncycastle.crypto.engines.DESEngine;
-import org.cryptomator.siv.SivMode.BlockCipherFactory;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.Mockito;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.security.Provider;
+import java.security.Security;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 /**
  * Official RFC 5297 test vector taken from https://tools.ietf.org/html/rfc5297#appendix-A.1 and https://tools.ietf.org/html/rfc5297#appendix-A.2
  */
 public class SivModeTest {
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testEncryptWithInvalidKey1() {
 		SecretKey key1 = Mockito.mock(SecretKey.class);
 		Mockito.when(key1.getEncoded()).thenReturn(null);
 		SecretKey key2 = Mockito.mock(SecretKey.class);
 		Mockito.when(key2.getEncoded()).thenReturn(new byte[16]);
 
-		new SivMode().encrypt(key1, key2, new byte[10]);
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			sivMode.encrypt(key1, key2, new byte[10]);
+		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testEncryptWithInvalidKey2() {
 		SecretKey key1 = Mockito.mock(SecretKey.class);
 		Mockito.when(key1.getEncoded()).thenReturn(new byte[16]);
 		SecretKey key2 = Mockito.mock(SecretKey.class);
 		Mockito.when(key2.getEncoded()).thenReturn(null);
 
-		new SivMode().encrypt(key1, key2, new byte[10]);
-	}
-
-	@Test(expected = NullPointerException.class)
-	public void testEncryptWithInvalidCipher() {
-		final byte[] dummyKey = new byte[16];
-		final SecretKey ctrKey = new SecretKeySpec(dummyKey, "AES");
-		final SecretKey macKey = new SecretKeySpec(dummyKey, "AES");
-		final SivMode sivMode = new SivMode(new BlockCipherFactory() {
-
-			@Override
-			public BlockCipher create() {
-				return null; // will cause exceptions
-			}
-		});
-
-		sivMode.encrypt(ctrKey, macKey, new byte[10]);
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testInvalidCipher() {
-		new SivMode(new BlockCipherFactory() {
-
-			@Override
-			public BlockCipher create() {
-				return new DESEngine(); // wrong block size
-			}
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			sivMode.encrypt(key1, key2, new byte[10]);
 		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testDecryptWithInvalidKey1() throws UnauthenticCiphertextException, IllegalBlockSizeException {
+	@Test
+	public void testInvalidCipher1() {
+		BlockCipherFactory factory = () -> null;
+
+		Assertions.assertThrows(NullPointerException.class, () -> {
+			new SivMode(factory);
+		});
+	}
+
+	@Test
+	public void testInvalidCipher2() {
+		BlockCipherFactory factory = DESEngine::new; // wrong block size
+
+		IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			new SivMode(factory);
+		});
+		MatcherAssert.assertThat(e.getMessage(), CoreMatchers.containsString("cipherFactory must create BlockCipher objects with a 16-byte block size"));
+	}
+
+	@Test
+	public void testDecryptWithInvalidKey1() {
 		SecretKey key1 = Mockito.mock(SecretKey.class);
 		Mockito.when(key1.getEncoded()).thenReturn(null);
 		SecretKey key2 = Mockito.mock(SecretKey.class);
 		Mockito.when(key2.getEncoded()).thenReturn(new byte[16]);
 
-		new SivMode().decrypt(key1, key2, new byte[16]);
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			sivMode.decrypt(key1, key2, new byte[16]);
+		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testDecryptWithInvalidKey2() throws UnauthenticCiphertextException, IllegalBlockSizeException {
+	@Test
+	public void testDecryptWithInvalidKey2() {
 		SecretKey key1 = Mockito.mock(SecretKey.class);
 		Mockito.when(key1.getEncoded()).thenReturn(new byte[16]);
 		SecretKey key2 = Mockito.mock(SecretKey.class);
 		Mockito.when(key2.getEncoded()).thenReturn(null);
 
-		new SivMode().decrypt(key1, key2, new byte[16]);
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			sivMode.decrypt(key1, key2, new byte[10]);
+		});
 	}
 
-	@Test(expected = IllegalBlockSizeException.class)
-	public void testDecryptWithInvalidBlockSize() throws UnauthenticCiphertextException, IllegalBlockSizeException {
+	@Test
+	public void testDecryptWithInvalidBlockSize() {
 		final byte[] dummyKey = new byte[16];
 		final SecretKey ctrKey = new SecretKeySpec(dummyKey, "AES");
 		final SecretKey macKey = new SecretKeySpec(dummyKey, "AES");
 
-		new SivMode().decrypt(ctrKey, macKey, new byte[10]);
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(IllegalBlockSizeException.class, () -> {
+			sivMode.decrypt(ctrKey, macKey, new byte[10]);
+		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testEncryptAssociatedDataLimit() {
 		final byte[] ctrKey = new byte[16];
 		final byte[] macKey = new byte[16];
 		final byte[] plaintext = new byte[30];
 
-		new SivMode().encrypt(ctrKey, macKey, plaintext, new byte[127][0]);
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			sivMode.encrypt(ctrKey, macKey, plaintext, new byte[127][0]);
+		});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void testDecryptAssociatedDataLimit() throws UnauthenticCiphertextException, IllegalBlockSizeException {
+	@Test
+	public void testDecryptAssociatedDataLimit() {
 		final byte[] ctrKey = new byte[16];
 		final byte[] macKey = new byte[16];
 		final byte[] plaintext = new byte[80];
 
-		new SivMode().decrypt(ctrKey, macKey, plaintext, new byte[127][0]);
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			sivMode.decrypt(ctrKey, macKey, plaintext, new byte[127][0]);
+		});
 	}
 
 	// CTR-AES https://tools.ietf.org/html/rfc5297#appendix-A.1
@@ -140,7 +165,10 @@ public class SivModeTest {
 				(byte) 0x23, (byte) 0xb2, (byte) 0xf0, (byte) 0x8f};
 
 		final byte[] result = new SivMode().generateKeyStream(ctrKey, ctr, 1);
-		Assert.assertArrayEquals(expected, result);
+		Assertions.assertArrayEquals(expected, result);
+
+		final byte[] resultProvider = new SivMode(getSunJceProvider()).generateKeyStream(ctrKey, ctr, 1);
+		Assertions.assertArrayEquals(expected, resultProvider);
 	}
 
 	// CTR-AES https://tools.ietf.org/html/rfc5297#appendix-A.2
@@ -170,7 +198,7 @@ public class SivModeTest {
 				(byte) 0xbc, (byte) 0x19, (byte) 0x5e, (byte) 0xc7};
 
 		final byte[] result = new SivMode().generateKeyStream(ctrKey, ctr, 3);
-		Assert.assertArrayEquals(expected, result);
+		Assertions.assertArrayEquals(expected, result);
 	}
 
 	@Test
@@ -198,7 +226,10 @@ public class SivModeTest {
 				(byte) 0x0a, (byte) 0x2e, (byte) 0xcc, (byte) 0x93};
 
 		final byte[] result = new SivMode().s2v(macKey, plaintext, ad);
-		Assert.assertArrayEquals(expected, result);
+		Assertions.assertArrayEquals(expected, result);
+
+		final byte[] resultProvider = new SivMode(getSunJceProvider()).s2v(macKey, plaintext, ad);
+		Assertions.assertArrayEquals(expected, resultProvider);
 	}
 
 	@Test
@@ -235,7 +266,7 @@ public class SivModeTest {
 				(byte) 0xfe, (byte) 0x5c};
 
 		final byte[] result = new SivMode().encrypt(aesKey, macKey, plaintext, ad);
-		Assert.assertArrayEquals(expected, result);
+		Assertions.assertArrayEquals(expected, result);
 	}
 
 	@Test
@@ -272,11 +303,11 @@ public class SivModeTest {
 				(byte) 0xdd, (byte) 0xee};
 
 		final byte[] result = new SivMode().decrypt(aesKey, macKey, ciphertext, ad);
-		Assert.assertArrayEquals(expected, result);
+		Assertions.assertArrayEquals(expected, result);
 	}
 
-	@Test(expected = UnauthenticCiphertextException.class)
-	public void testSivDecryptWithInvalidKey() throws UnauthenticCiphertextException, IllegalBlockSizeException {
+	@Test
+	public void testSivDecryptWithInvalidKey() {
 		final byte[] macKey = {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, (byte) 0xfc, //
 				(byte) 0xfb, (byte) 0xfa, (byte) 0xf9, (byte) 0xf8, //
 				(byte) 0xf7, (byte) 0xf6, (byte) 0xf5, (byte) 0xf4, //
@@ -303,11 +334,14 @@ public class SivModeTest {
 				(byte) 0xda, (byte) 0xef, (byte) 0x7f, (byte) 0x6a, //
 				(byte) 0xfe, (byte) 0x5c};
 
-		new SivMode().decrypt(aesKey, macKey, ciphertext, ad);
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(UnauthenticCiphertextException.class, () -> {
+			sivMode.decrypt(aesKey, macKey, ciphertext, ad);
+		});
 	}
 
-	@Test(expected = IllegalBlockSizeException.class)
-	public void testSivDecryptWithInvalidCiphertext() throws UnauthenticCiphertextException, IllegalBlockSizeException {
+	@Test
+	public void testSivDecryptWithInvalidCiphertext() {
 		final byte[] macKey = {(byte) 0xff, (byte) 0xfe, (byte) 0xfd, (byte) 0xfc, //
 				(byte) 0xfb, (byte) 0xfa, (byte) 0xf9, (byte) 0xf8, //
 				(byte) 0xf7, (byte) 0xf6, (byte) 0xf5, (byte) 0xf4, //
@@ -323,14 +357,17 @@ public class SivModeTest {
 				(byte) 0x95, (byte) 0x0a, (byte) 0xcd, (byte) 0x32, //
 				(byte) 0x0a, (byte) 0x2e, (byte) 0xcc};
 
-		new SivMode().decrypt(aesKey, macKey, ciphertext);
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(IllegalBlockSizeException.class, () -> {
+			sivMode.decrypt(aesKey, macKey, ciphertext);
+		});
 	}
 
 	/**
 	 * https://tools.ietf.org/html/rfc5297#appendix-A.2
 	 */
 	@Test
-	public void testNonceBasedAuthenticatedEncryption() throws InvalidKeyException {
+	public void testNonceBasedAuthenticatedEncryption() {
 		final byte[] macKey = {(byte) 0x7f, (byte) 0x7e, (byte) 0x7d, (byte) 0x7c, //
 				(byte) 0x7b, (byte) 0x7a, (byte) 0x79, (byte) 0x78, //
 				(byte) 0x77, (byte) 0x76, (byte) 0x75, (byte) 0x74, //
@@ -393,7 +430,7 @@ public class SivModeTest {
 				(byte) 0x48, (byte) 0x5b, (byte) 0x62, (byte) 0xa3, //
 				(byte) 0xfd, (byte) 0x5c, (byte) 0x0d};
 
-		Assert.assertArrayEquals(expected, result);
+		Assertions.assertArrayEquals(expected, result);
 	}
 
 	@Test
@@ -405,7 +442,7 @@ public class SivModeTest {
 		final byte[] cleartext = "hello world".getBytes();
 		final byte[] ciphertext = sivMode.encrypt(ctrKey, macKey, cleartext);
 		final byte[] decrypted = sivMode.decrypt(ctrKey, macKey, ciphertext);
-		Assert.assertArrayEquals(cleartext, decrypted);
+		Assertions.assertArrayEquals(cleartext, decrypted);
 	}
 
 	@Test
@@ -413,39 +450,39 @@ public class SivModeTest {
 		final byte[] output = new byte[4];
 
 		SivMode.shiftLeft(new byte[] {(byte) 0x77, (byte) 0x3A, (byte) 0x87, (byte) 0x22}, output);
-		Assert.assertArrayEquals(new byte[] {(byte) 0xEE, (byte) 0x75, (byte) 0x0E, (byte) 0x44}, output);
+		Assertions.assertArrayEquals(new byte[] {(byte) 0xEE, (byte) 0x75, (byte) 0x0E, (byte) 0x44}, output);
 
 		SivMode.shiftLeft(new byte[] {(byte) 0x56, (byte) 0x12, (byte) 0x34, (byte) 0x99}, output);
-		Assert.assertArrayEquals(new byte[] {(byte) 0xAC, (byte) 0x24, (byte) 0x69, (byte) 0x32}, output);
+		Assertions.assertArrayEquals(new byte[] {(byte) 0xAC, (byte) 0x24, (byte) 0x69, (byte) 0x32}, output);
 
 		SivMode.shiftLeft(new byte[] {(byte) 0xCF, (byte) 0xAB, (byte) 0xBA, (byte) 0x78}, output);
-		Assert.assertArrayEquals(new byte[] {(byte) 0x9F, (byte) 0x57, (byte) 0x74, (byte) 0xF0}, output);
+		Assertions.assertArrayEquals(new byte[] {(byte) 0x9F, (byte) 0x57, (byte) 0x74, (byte) 0xF0}, output);
 
 		SivMode.shiftLeft(new byte[] {(byte) 0x89, (byte) 0x65, (byte) 0x43, (byte) 0x21}, output);
-		Assert.assertArrayEquals(new byte[] {(byte) 0x12, (byte) 0xCA, (byte) 0x86, (byte) 0x42}, output);
+		Assertions.assertArrayEquals(new byte[] {(byte) 0x12, (byte) 0xCA, (byte) 0x86, (byte) 0x42}, output);
 	}
 
 	@Test
 	public void testDouble() {
-		Assert.assertArrayEquals(
+		Assertions.assertArrayEquals(
 				new byte[] {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
 						(byte) 0x00, (byte) 0x00,},
 				SivMode.dbl(new byte[] {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
 						(byte) 0x00, (byte) 0x00, (byte) 0x00,}));
 
-		Assert.assertArrayEquals(
+		Assertions.assertArrayEquals(
 				new byte[] {(byte) 0x22, (byte) 0x44, (byte) 0x66, (byte) 0x88, (byte) 0xAA, (byte) 0xCC, (byte) 0xEF, (byte) 0x10, (byte) 0x22, (byte) 0x44, (byte) 0x66, (byte) 0x88, (byte) 0x22, (byte) 0x44,
 						(byte) 0x22, (byte) 0x44,},
 				SivMode.dbl(new byte[] {(byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x55, (byte) 0x66, (byte) 0x77, (byte) 0x88, (byte) 0x11, (byte) 0x22, (byte) 0x33, (byte) 0x44, (byte) 0x11,
 						(byte) 0x22, (byte) 0x11, (byte) 0x22,}));
 
-		Assert.assertArrayEquals(
+		Assertions.assertArrayEquals(
 				new byte[] {(byte) 0x10, (byte) 0x88, (byte) 0x44, (byte) 0x23, (byte) 0x32, (byte) 0xEE, (byte) 0xAA, (byte) 0x66, (byte) 0x22, (byte) 0x66, (byte) 0xAA, (byte) 0xEE, (byte) 0x22, (byte) 0x44,
 						(byte) 0x89, (byte) 0x97,},
 				SivMode.dbl(new byte[] {(byte) 0x88, (byte) 0x44, (byte) 0x22, (byte) 0x11, (byte) 0x99, (byte) 0x77, (byte) 0x55, (byte) 0x33, (byte) 0x11, (byte) 0x33, (byte) 0x55, (byte) 0x77, (byte) 0x11,
 						(byte) 0x22, (byte) 0x44, (byte) 0x88,}));
 
-		Assert.assertArrayEquals(
+		Assertions.assertArrayEquals(
 				new byte[] {(byte) 0xF5, (byte) 0x79, (byte) 0xF5, (byte) 0x78, (byte) 0x02, (byte) 0x46, (byte) 0x02, (byte) 0x46, (byte) 0xAD, (byte) 0xB8, (byte) 0x24, (byte) 0x68, (byte) 0xAD, (byte) 0xB8,
 						(byte) 0x24, (byte) 0xEF,},
 				SivMode.dbl(new byte[] {(byte) 0xFA, (byte) 0xBC, (byte) 0xFA, (byte) 0xBC, (byte) 0x01, (byte) 0x23, (byte) 0x01, (byte) 0x23, (byte) 0x56, (byte) 0xDC, (byte) 0x12, (byte) 0x34, (byte) 0x56,
@@ -454,134 +491,136 @@ public class SivModeTest {
 
 	@Test
 	public void testXor() {
-		Assert.assertArrayEquals(new byte[] {}, SivMode.xor(new byte[0], new byte[0]));
-		Assert.assertArrayEquals(new byte[3], SivMode.xor(new byte[3], new byte[3]));
-		Assert.assertArrayEquals(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03}, SivMode.xor(new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
-		Assert.assertArrayEquals(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03}, SivMode.xor(new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
-		Assert.assertArrayEquals(new byte[] {(byte) 0xAB, (byte) 0x87, (byte) 0x34}, SivMode.xor(new byte[] {(byte) 0xB9, (byte) 0xB3, (byte) 0x62}, new byte[] {(byte) 0x12, (byte) 0x34, (byte) 0x56, (byte) 0x78}));
+		Assertions.assertArrayEquals(new byte[] {}, SivMode.xor(new byte[0], new byte[0]));
+		Assertions.assertArrayEquals(new byte[3], SivMode.xor(new byte[3], new byte[3]));
+		Assertions.assertArrayEquals(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03}, SivMode.xor(new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
+		Assertions.assertArrayEquals(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03}, SivMode.xor(new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
+		Assertions.assertArrayEquals(new byte[] {(byte) 0xAB, (byte) 0x87, (byte) 0x34}, SivMode.xor(new byte[] {(byte) 0xB9, (byte) 0xB3, (byte) 0x62}, new byte[] {(byte) 0x12, (byte) 0x34, (byte) 0x56, (byte) 0x78}));
 	}
 
 	@Test
 	public void testXorend() {
-		Assert.assertArrayEquals(new byte[] {}, SivMode.xorend(new byte[0], new byte[0]));
-		Assert.assertArrayEquals(new byte[3], SivMode.xorend(new byte[3], new byte[3]));
-		Assert.assertArrayEquals(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03}, SivMode.xorend(new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
-		Assert.assertArrayEquals(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03}, SivMode.xorend(new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
-		Assert.assertArrayEquals(new byte[] {(byte) 0xB8, (byte) 0xA9, (byte) 0xAB, (byte) 0x87, (byte) 0x34},
+		Assertions.assertArrayEquals(new byte[] {}, SivMode.xorend(new byte[0], new byte[0]));
+		Assertions.assertArrayEquals(new byte[3], SivMode.xorend(new byte[3], new byte[3]));
+		Assertions.assertArrayEquals(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03}, SivMode.xorend(new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
+		Assertions.assertArrayEquals(new byte[] {(byte) 0x01, (byte) 0x02, (byte) 0x03}, SivMode.xorend(new byte[] {(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[] {(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
+		Assertions.assertArrayEquals(new byte[] {(byte) 0xB8, (byte) 0xA9, (byte) 0xAB, (byte) 0x87, (byte) 0x34},
 				SivMode.xorend(new byte[] {(byte) 0xB8, (byte) 0xA9, (byte) 0xB9, (byte) 0xB3, (byte) 0x62}, new byte[] {(byte) 0x12, (byte) 0x34, (byte) 0x56}));
-		Assert.assertArrayEquals(new byte[] {(byte) 0x23, (byte) 0x80, (byte) 0x32, (byte) 0xEF, (byte) 0xDE, (byte) 0xCD, (byte) 0xAB, (byte) 0x87, (byte) 0x34},
+		Assertions.assertArrayEquals(new byte[] {(byte) 0x23, (byte) 0x80, (byte) 0x32, (byte) 0xEF, (byte) 0xDE, (byte) 0xCD, (byte) 0xAB, (byte) 0x87, (byte) 0x34},
 				SivMode.xorend(new byte[] {(byte) 0x23, (byte) 0x80, (byte) 0x32, (byte) 0xEF, (byte) 0xDE, (byte) 0xCD, (byte) 0xB9, (byte) 0xB3, (byte) 0x62,}, new byte[] {(byte) 0x12, (byte) 0x34, (byte) 0x56}));
 	}
 
-	@Test
-	public void testGeneratedTestCases() throws IOException, UnauthenticCiphertextException, IllegalBlockSizeException {
-		final EncryptionTestCase[] allTestCases = EncryptionTestCase.readTestCases();
-
-		// Check that decryption fails if the wrong MAC key is used
-		for (int testCaseIdx = 0; testCaseIdx < allTestCases.length; testCaseIdx++) {
-			EncryptionTestCase testCase = allTestCases[testCaseIdx];
-			final byte[] macKey = testCase.getMacKey();
-
-			// Pick some arbitrary key byte to tamper with
-			final int tamperedByteIndex = testCaseIdx % macKey.length;
-
-			// Flip a single bit
-			macKey[tamperedByteIndex] ^= 0x10;
-
+	@TestFactory
+	public Stream<DynamicContainer> testGeneratedTestCases() {
+		InputStream in = EncryptionTestCase.class.getResourceAsStream("/testcases.txt");
+		Reader reader = new InputStreamReader(in, StandardCharsets.US_ASCII);
+		BufferedReader bufferedReader = new BufferedReader(reader);
+		Stream<String> lines = bufferedReader.lines().onClose(() -> {
 			try {
-				new SivMode().decrypt(testCase.getCtrKey(), macKey, testCase.getCiphertext(), testCase.getAssociatedData());
-				Assert.fail();
-			} catch (UnauthenticCiphertextException ex) {
-				// Test case passed.
+				bufferedReader.close();
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
 			}
-		}
+		});
+		SivMode sivMode = new SivMode();
+		return lines.map(EncryptionTestCase::fromLine).map(testCase -> {
+			int testIdx = testCase.getTestCaseNumber();
+			return DynamicContainer.dynamicContainer("test case " + testIdx, Arrays.asList(
+					DynamicTest.dynamicTest("decrypt", () -> {
+						byte[] actualPlaintext = sivMode.decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), testCase.getAssociatedData());
+						Assertions.assertArrayEquals(testCase.getPlaintext(), actualPlaintext);
+					}),
+					DynamicTest.dynamicTest("encrypt", () -> {
+						byte[] actualCiphertext = sivMode.encrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getPlaintext(), testCase.getAssociatedData());
+						Assertions.assertArrayEquals(testCase.getCiphertext(), actualCiphertext);
+					}),
+					DynamicTest.dynamicTest("decrypt fails due to tampered MAC", () -> {
+						byte[] macKey = testCase.getMacKey();
 
-		// Check that decryption fails if ciphertext is wrong
-		// Flipping a single bit anywhere in the ciphertext will invalidate either the IV or the plaintext
-		for (int testCaseIdx = 0; testCaseIdx < allTestCases.length; testCaseIdx++) {
-			EncryptionTestCase testCase = allTestCases[testCaseIdx];
-			byte[] ciphertext = testCase.getCiphertext();
+						// Pick some arbitrary key byte to tamper with
+						int tamperedByteIndex = testIdx % macKey.length;
 
-			// Pick some arbitrary ciphertext byte to tamper with
-			final int tamperedByteIndex = testCaseIdx % ciphertext.length;
+						// Flip a single bit
+						macKey[tamperedByteIndex] ^= 0x10;
 
-			// Flip a single bit
-			ciphertext[tamperedByteIndex] ^= 0x10;
+						Assertions.assertThrows(UnauthenticCiphertextException.class, () -> {
+							sivMode.decrypt(testCase.getCtrKey(), macKey, testCase.getCiphertext(), testCase.getAssociatedData());
+						});
+					}),
+					DynamicTest.dynamicTest("decrypt fails due to tampered ciphertext", () -> {
+						byte[] ciphertext = testCase.getCiphertext();
 
-			try {
-				new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), ciphertext, testCase.getAssociatedData());
-				Assert.fail();
-			} catch (UnauthenticCiphertextException ex) {
-				// Test case passed.
-			}
-		}
+						// Pick some arbitrary key byte to tamper with
+						int tamperedByteIndex = testIdx % ciphertext.length;
 
-		// Check that decryption fails if associated data is tampered with
-		for (int testCaseIdx = 0; testCaseIdx < allTestCases.length; testCaseIdx++) {
-			EncryptionTestCase testCase = allTestCases[testCaseIdx];
-			byte[][] ad = testCase.getAssociatedData();
+						// Flip a single bit
+						ciphertext[tamperedByteIndex] ^= 0x10;
 
-			// Try flipping bits in the associated data elements
-			for (int adIdx = 0; adIdx < ad.length; adIdx++) {
-				// Skip if this ad element is empty
-				if (ad[adIdx].length == 0) {
-					continue;
-				}
+						Assertions.assertThrows(UnauthenticCiphertextException.class, () -> {
+							sivMode.decrypt(testCase.getCtrKey(), testCase.getMacKey(), ciphertext, testCase.getAssociatedData());
+						});
+					}),
+					DynamicTest.dynamicTest("decrypt fails due to tampered associated data", () -> {
+						byte[][] ad = testCase.getAssociatedData();
 
-				// Pick some arbitrary byte to tamper with
-				final int tamperedByteIndex = testCaseIdx % ad[adIdx].length;
+						// Try flipping bits in the associated data elements
+						for (int adIdx = 0; adIdx < ad.length; adIdx++) {
+							// Skip if this ad element is empty
+							if (ad[adIdx].length == 0) {
+								continue;
+							}
 
-				// Flip a single bit
-				ad[adIdx][tamperedByteIndex] ^= 0x04;
+							// Pick some arbitrary byte to tamper with
+							int tamperedByteIndex = testIdx % ad[adIdx].length;
 
-				try {
-					new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), ad);
-					Assert.fail();
-				} catch (UnauthenticCiphertextException ex) {
-					// Test case passed.
-				}
+							// Flip a single bit
+							ad[adIdx][tamperedByteIndex] ^= 0x04;
 
-				// Restore ad to original value
-				ad[adIdx][tamperedByteIndex] ^= 0x04;
-			}
+							Assertions.assertThrows(UnauthenticCiphertextException.class, () -> {
+								sivMode.decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), ad);
+							});
 
-			// If there's room for another AD element
-			if (ad.length <= 125) {
-				// Try prepending an AD element
-				byte[][] prependedAd = new byte[ad.length + 1][];
-				prependedAd[0] = new byte[testCaseIdx % 16];
-				System.arraycopy(ad, 0, prependedAd, 1, ad.length);
-				try {
-					new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), prependedAd);
-					Assert.fail();
-				} catch (UnauthenticCiphertextException ex) {
-					// Test case passed.
-				}
+							// Restore ad to original value
+							ad[adIdx][tamperedByteIndex] ^= 0x04;
+						}
+					}),
+					DynamicTest.dynamicTest("decrypt fails due to prepended associated data", () -> {
+						// Skip if there is no more room for additional AD
+						if (testCase.getAssociatedData().length > 125) {
+							return;
+						}
 
-				// Try appending an AD element
-				byte[][] appendedAd = new byte[ad.length + 1][];
-				appendedAd[ad.length] = new byte[testCaseIdx % 16];
-				System.arraycopy(ad, 0, appendedAd, 0, ad.length);
-				try {
-					new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), appendedAd);
-					Assert.fail();
-				} catch (UnauthenticCiphertextException ex) {
-					// Test case passed.
-				}
-			}
-		}
+						byte[][] ad = testCase.getAssociatedData();
+						byte[][] prependedAd = new byte[ad.length + 1][];
+						prependedAd[0] = new byte[testIdx % 16];
+						System.arraycopy(ad, 0, prependedAd, 1, ad.length);
 
-		// Check that ciphertexts/IVs are produced correctly
-		for (EncryptionTestCase testCase : allTestCases) {
-			final byte[] actualCiphertext = new SivMode().encrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getPlaintext(), testCase.getAssociatedData());
-			Assert.assertArrayEquals(testCase.getCiphertext(), actualCiphertext);
-		}
+						Assertions.assertThrows(UnauthenticCiphertextException.class, () -> {
+							sivMode.decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), prependedAd);
+						});
+					}),
+					DynamicTest.dynamicTest("decrypt fails due to appended associated data", () -> {
+						// Skip if there is no more room for additional AD
+						if (testCase.getAssociatedData().length > 125) {
+							return;
+						}
 
-		// Check that ciphertexts are decrypted correctly
-		for (EncryptionTestCase testCase : allTestCases) {
-			final byte[] actualPlaintext = new SivMode().decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), testCase.getAssociatedData());
-			Assert.assertArrayEquals(testCase.getPlaintext(), actualPlaintext);
-		}
+						byte[][] ad = testCase.getAssociatedData();
+						byte[][] appendedAd = new byte[ad.length + 1][];
+						appendedAd[ad.length] = new byte[testIdx % 16];
+						System.arraycopy(ad, 0, appendedAd, 0, ad.length);
+
+						Assertions.assertThrows(UnauthenticCiphertextException.class, () -> {
+							sivMode.decrypt(testCase.getCtrKey(), testCase.getMacKey(), testCase.getCiphertext(), appendedAd);
+						});
+					})
+			));
+		});
 	}
 
+	private Provider getSunJceProvider() {
+		Provider provider = Security.getProvider("SunJCE");
+		Assertions.assertNotNull(provider);
+		return provider;
+	}
 }

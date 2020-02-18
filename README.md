@@ -62,6 +62,12 @@ requires org.cryptomator.siv;
 
 Because BouncyCastle classes are shaded, this library only depends on `java.base`.
 
+## Building
+
+This is a Maven project. To build it, run `mvn clean install`.
+
+Requires JDK 9+ at build time due to JPMS support.
+
 ## License
 Distributed under the MIT X Consortium license. See the LICENSE file for more info.
 

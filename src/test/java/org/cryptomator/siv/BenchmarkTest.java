@@ -8,7 +8,8 @@
  ******************************************************************************/
 package org.cryptomator.siv;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnJre;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
@@ -18,22 +19,17 @@ public class BenchmarkTest {
 
 	@Test
 	public void runBenchmarks() throws RunnerException {
-		if (System.getProperty("java.version").startsWith("1.8")) {
-			// Taken from http://stackoverflow.com/a/30486197/4014509:
-			Options opt = new OptionsBuilder()
-					// Specify which benchmarks to run
-					.include(getClass().getPackage().getName() + ".*Benchmark.*")
-					// Set the following options as needed
-					.threads(2).forks(2) //
-					.shouldFailOnError(true).shouldDoGC(true)
-					// .jvmArgs("-XX:+UnlockDiagnosticVMOptions", "-XX:+PrintInlining")
-					// .addProfiler(WinPerfAsmProfiler.class)
-					.build();
-
-			new Runner(opt).run();
-		} else {
-			System.out.println("Skipping Benchmarks");
-		}
+		// Taken from http://stackoverflow.com/a/30486197/4014509:
+		Options opt = new OptionsBuilder()
+				// Specify which benchmarks to run
+				.include(getClass().getPackage().getName() + ".*Benchmark.*")
+				// Set the following options as needed
+				.threads(2).forks(2) //
+				.shouldFailOnError(true).shouldDoGC(true)
+				// .jvmArgs("-XX:+UnlockDiagnosticVMOptions", "-XX:+PrintInlining")
+				// .addProfiler(WinPerfAsmProfiler.class)
+				.build();
+		new Runner(opt).run();
 	}
 
 }

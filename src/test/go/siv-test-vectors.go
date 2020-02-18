@@ -76,18 +76,18 @@ func printTestCases() {
 // Print a single test case to STDOUT.
 func printTestCase(key []byte, plaintext []byte, associatedData [][]byte) {
 	// CTR mode encryption key
-	fmt.Println(hex.EncodeToString(key[len(key)/2:]))
+	fmt.Printf("%s;", hex.EncodeToString(key[len(key)/2:]))
 
 	// MAC (authentication) key
-	fmt.Println(hex.EncodeToString(key[:len(key)/2]))
+	fmt.Printf("%s;", hex.EncodeToString(key[:len(key)/2]))
 
 	// Plaintext
-	fmt.Println(hex.EncodeToString(plaintext))
+	fmt.Printf("%s;", hex.EncodeToString(plaintext))
 
 	// Additional associated data
-	fmt.Printf("%v\n", len(associatedData))
+	fmt.Printf("%v;", len(associatedData))
 	for _, adElem := range associatedData {
-		fmt.Println(hex.EncodeToString(adElem))
+		fmt.Printf("%s;", hex.EncodeToString(adElem))
 	}
 
 	// Ciphertext
@@ -97,7 +97,4 @@ func printTestCase(key []byte, plaintext []byte, associatedData [][]byte) {
 		os.Exit(7)
 	}
 	fmt.Println(hex.EncodeToString(ciphertext));
-
-	// End of test case
-	fmt.Println("---")
 }

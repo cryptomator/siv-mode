@@ -1,11 +1,12 @@
+dist: bionic
 language: java
 sudo: false
 jdk:
-- oraclejdk9
+- openjdk13
 env:
   global:
   - secure: "dYjMF9qjmv85TdhSauKTfU+5Lt7q1ZpOLfpYuRz1yQF3Y+Ru/5/2Ucb4efgzLNRE4u9KGM7MJr1YRH3qV5OyxBqfKZ9ORq5noQbukfKyDDjS7oRn1HiHWG5ZWs2Ja35z0a5BK8+h5OF8kA1C5dmQ/tePKP5JAZZlhwnBolkwUXTJXAvppSBpl2/m/0KBJoHMJYxiY4DJ8grf3OWWhsWO9YMeJAov+N4GFJy9J85tbKvb4XgJITBPrSmK981JS67sddjelaodaolF5vewoW7KfxG87SMRr6xOno0Qy1td2aiUXMt10w2eI2FTluC9Fp0UJ7z3rMEGcHGFjaPXk+bLOAwGwoJq3xt3mA91Y7N1aQuOnWL01K94c7rw9yUU+HUfrUz1iPVEFD36FkwZNFYXHPL8JMuSL6bIafaiu5Nd95QZP7vET3It07zBc/KcV2izdk9aXOOPumKmw/VpzunWfYF2we53uuN1tvzBJ5yxuHjsoteTkbdoYpIinAHI3QfREwwRX19Q4jjJU9GTT12n/7GQopXzuytK6M6xlltVVD/KffmdyiqqWA1u391t2HcgmX6TyvHS4jNy9hbJ+/zfqwZG+NQFSPz99LAiGpLYmctY3A5oofM16x07Tofk/HvbCMCjuMsk0zLgd1m915TFJ5ZUQ510ohrM5IBSdUJ6NUc=" # CODACY_PROJECT_TOKEN
-  - secure: "PQ/K3HeqG52aDOel6ROp8vJo1ybfnwjdYKewKssWQwsb38BIPe68RKgJ06mOeyacrf+i1BkJgKspTcwLeMqfRNP+mxAg3WBccG6dwZy3LdeaRBrcGQhiBLgK8RthIFxOPoY4pm2iiUQdcakWXHIqz62asV8Hx9Yk8qyyIch+kj4uEE2bgyJGKb3MM56kPmjOSZIuD+hR3V/RqBBgpKrDsfkEGH5kZSfLlt9oy5tsJsAzlY4cYFq3RBy4KZQUifRXh6i7MHWOSt48E1Qt7hwik0pSchS7AqMAvu3tCstc+hUGavpq/XXqlqH8kWjplpVJQsQ5YUcacDWFxuFpfPTBbFJKITEQrEoXlSNOXMTIzaBdn8CZtCoeIonHMXkAaOncVmEIjFQbOl0XzDNz6GXmUYCoUcWeBhq4rBcFqq844VIUaRbmD+eQR7zDx2B5WcKGt/h273iK7rCBQB3dEOhhab2rliES8FmUKj1U/k50Ae7oVrlnPm6fJH7tCsEKEEgPrvlLEzOtFpqrOeQZ91B+wkopw4d+z+24OBgVpk4Plv6G+CBHU61ixwOJ9MJFEPeZ/2gNWmZkGItS6L0eMqK+SvMYzZETrreceLFWRSzmpRKbWilmauBLKzFNnf9+Emu+XD0boC/oQGwyYGi4Cm1HmSAInGXfvwaDh7d5RHAbh0A=" # BINTRAY_API_KEY
+  - secure: "SM5wxw+mBvG65MS1B31rJ30oSCwU8OX4diIFAtx1gxBissZv9mVfkzL8mNeMMy0fKQB4aAfq2d/PBeSoNwYPqC6NEpv0n/aoBk35oZMEJpeOdBQ1/6tHhQmHty9Cg4cf2pWQdYCMUn1iJ09ONcodUpnIQouHNHyUjzWCeXnYdJOA5KR/CdRdhFFzghAC2Zm4Zqhba5Ie2JjBabyivLZgv5jM3+Sp4JPbZQI7OjZHUgxCVfh6YLBPRXsfMjeR/F4PWyF5ojo7UGY61qPS5YUj7YTiSI5LHWelcWC8wQNKhqT2h4SoD7J2+ZCS04MYgqgZx8ZtO/LZBBLdsQi4LBTsrK+3zAI4QmsgI+6z6kC9kdS5N04BdnLNEuDw8COGt+3Y5w+IYKTdtbBTx/p9+cY/0cFcGA8B6jGYQuClPQhshqr9pTrfIf6stD515qHTx4KsU6DDNpsSoKRS8C36tdrDTKcbZzvg7uEWnTwrKi+ZHJKFTiJb9Ozaiganttot/Zlub7LXBsArgTLT1Aw0EzyX+wnWcVM/QYNSMj+TUlnWg+mPdZemjyBkvoyw9UhNpvtdK/AdGUpu1oS146Q53PwXb4ROd3n57116ZJbUwhYfThFseQctj3gunCjDJId0uSwkyeowrolDRsCgPfZ1YQYGLQi1PEpesfTvm4PVYUfx9Jc=" # BINTRAY_API_KEY
 install:
 - curl -o $HOME/.m2/settings.xml https://gist.githubusercontent.com/cryptobot/cf5fbd909c4782aaeeeb7c7f4a1a43da/raw/e60ee486e34ee0c79f89f947abe2c83b4290c6bb/settings.xml
 - mvn dependency:go-offline -Pdependency-check,coverage,release
@@ -14,7 +15,7 @@ before_script:
 script:
 - mvn clean test jacoco:report verify -Pcoverage
 after_success:
-- curl -o ~/codacy-coverage-reporter.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/4.0.2/codacy-coverage-reporter-4.0.2-assembly.jar
+- curl -o ~/codacy-coverage-reporter.jar https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/7.0.0/codacy-coverage-reporter-7.0.0-assembly.jar
 - $JAVA_HOME/bin/java -jar ~/codacy-coverage-reporter.jar report -l Java -r target/site/jacoco/jacoco.xml
 cache:
   directories:
@@ -27,4 +28,4 @@ deploy:
     repo: cryptomator/siv-mode
     tags: true
 after_deploy:
-  - "echo '{\"close\": \"1\"}' | curl -v -X POST -u cryptobot:${BINTRAY_API_KEY} https://api.bintray.com/maven_central_sync/cryptomator/maven/siv-mode/versions/${TRAVIS_TAG}"
+  - "echo '{\"close\": \"1\"}' | curl --max-time 10 -X POST -u cryptobot:${BINTRAY_API_KEY} https://api.bintray.com/maven_central_sync/cryptomator/maven/siv-mode/versions/${TRAVIS_TAG}"
