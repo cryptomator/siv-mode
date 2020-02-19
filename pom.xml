@@ -164,7 +164,8 @@
 							<minimizeJar>true</minimizeJar>
 							<keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<createSourcesJar>false</createSourcesJar>
+							<createSourcesJar>true</createSourcesJar>
+							<shadeSourcesContent>true</shadeSourcesContent>
 							<artifactSet>
 								<includes>
 									<include>org.bouncycastle:bcprov-jdk15on</include>
@@ -178,13 +179,9 @@
 							</relocations>
 							<filters>
 								<filter>
-									<artifact>*:*</artifact>
+									<artifact>org.bouncycastle:bcprov-jdk15on</artifact>
 									<excludes>
-										<exclude>META-INF/MANIFEST.MF</exclude>
-										<exclude>META-INF/*.SF</exclude>
-										<exclude>META-INF/*.DSA</exclude>
-										<exclude>META-INF/*.RSA</exclude>
-										<exclude>META-INF/services/**</exclude>
+										<exclude>META-INF/**</exclude>
 									</excludes>
 								</filter>
 							</filters>
@@ -282,6 +279,7 @@
 						<executions>
 							<execution>
 								<id>attach-sources</id>
+								<phase>prepare-package</phase>
 								<goals>
 									<goal>jar-no-fork</goal>
 								</goals>
@@ -299,6 +297,9 @@
 								</goals>
 							</execution>
 						</executions>
+						<configuration>
+							<release>7</release>
+						</configuration>
 					</plugin>
 				</plugins>
 			</build>
