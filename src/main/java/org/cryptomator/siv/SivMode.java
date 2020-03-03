@@ -242,6 +242,11 @@ public final class SivMode {
 		final CipherParameters params = new KeyParameter(macKey);
 		final CMac mac = new CMac(threadLocalCipher.get());
 		mac.init(params);
+		
+		// RFC 5297 defines a n == 0 case here. Where n is the length of the input vector:
+		// S1 = associatedData1, S2 = associatedData2, ... Sn = plaintext
+		// Since this method is invoked only by encrypt/decrypt, we always have a plaintext.
+		// Thus n > 0
 
 		byte[] d = mac(mac, BYTES_ZERO);
 
