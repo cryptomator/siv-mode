@@ -41,7 +41,7 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.64</version>
+			<version>1.65</version>
 			<!-- see maven-shade-plugin; we don't want this as a transitive dependency in other projects -->
 			<optional>true</optional>
 		</dependency>
@@ -50,13 +50,13 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
-			<version>5.6.0</version>
+			<version>5.6.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>3.2.4</version>
+			<version>3.3.3</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -68,7 +68,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>28.2-jre</version>
+			<version>29.0-jre</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -152,7 +152,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.2.2</version>
+				<version>3.2.3</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -199,7 +199,7 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>5.3.0</version>
+						<version>5.3.2</version>
 						<configuration>
 							<cveValidForHours>24</cveValidForHours>
 							<failBuildOnCVSS>0</failBuildOnCVSS>
@@ -262,7 +262,7 @@
 					</plugin>
 					<plugin>
 						<artifactId>maven-javadoc-plugin</artifactId>
-						<version>3.1.1</version>
+						<version>3.2.0</version>
 						<executions>
 							<execution>
 								<id>attach-javadocs</id>
@@ -271,6 +271,9 @@
 								</goals>
 							</execution>
 						</executions>
+						<configuration>
+							<release>8</release>
+						</configuration>
 					</plugin>
 				</plugins>
 			</build>
