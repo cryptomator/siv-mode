@@ -1,4 +1,4 @@
-# RFC 5297 SIV mode of operation in Java
+# Java RFC 5297 SIV Authenticated Encryption
 
 [![Build Status](https://travis-ci.org/cryptomator/siv-mode.svg?branch=develop)](https://travis-ci.org/cryptomator/siv-mode)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/8b274788dab046259a40e56688236790)](https://www.codacy.com/app/cryptomator/siv-mode)
@@ -14,7 +14,7 @@
 - Defaults on AES, but supports any block cipher with a 128-bit block size.
 - Supports any key sizes that the block cipher supports (e.g. 128/192/256-bit keys for AES)
 - Thread-safe
-- Compatible with Android API Level 16 (since version 1.2.0)
+- Compatible with Android API Level 24 (since version 1.4.0)
 
 ## Audits
 - [Version 1.0.8 audit by Tim McLean](https://www.chosenplaintext.ca/publications/20161104-siv-mode-report.pdf) (Issues fixed with 1.1.0)
@@ -47,14 +47,14 @@ public void encryptWithAssociatedData() {
   <dependency>
     <groupId>org.cryptomator</groupId>
     <artifactId>siv-mode</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.2</version>
   </dependency>
 </dependencies>
 ```
 
 ## JPMS
 
-From version 1.3.0 onwards this library is an explicit module with the name `org.cryptomator.siv`. You can use it by adding the following line to your `module-info.java`.
+From version 1.3.2 onwards this library is an explicit module with the name `org.cryptomator.siv`. You can use it by adding the following line to your `module-info.java`.
 
 ```java
 requires org.cryptomator.siv;
@@ -66,7 +66,7 @@ Because BouncyCastle classes are shaded, this library only depends on `java.base
 
 This is a Maven project. To build it, run `mvn clean install`.
 
-Requires JDK 9+ at build time due to JPMS support.
+Requires JDK 11.0.3 or newer at build time due to JPMS support.
 
 ## License
 Distributed under the MIT X Consortium license. See the LICENSE file for more info.

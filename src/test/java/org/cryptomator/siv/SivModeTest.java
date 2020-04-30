@@ -8,6 +8,7 @@ package org.cryptomator.siv;
  *     Sebastian Stenzel - initial API and implementation
  ******************************************************************************/
 
+import org.bouncycastle.crypto.engines.AESLightEngine;
 import org.bouncycastle.crypto.engines.DESEngine;
 import org.cryptomator.siv.SivMode.BlockCipherFactory;
 import org.hamcrest.CoreMatchers;
@@ -148,7 +149,7 @@ public class SivModeTest {
 
 	// CTR-AES https://tools.ietf.org/html/rfc5297#appendix-A.1
 	@Test
-	public void testGenerateKeyStream1() {
+	public void testComputeCtr1() {
 		final byte[] ctrKey = {(byte) 0xf0, (byte) 0xf1, (byte) 0xf2, (byte) 0xf3, //
 				(byte) 0xf4, (byte) 0xf5, (byte) 0xf6, (byte) 0xf7, //
 				(byte) 0xf8, (byte) 0xf9, (byte) 0xfa, (byte) 0xfb, //
@@ -164,16 +165,19 @@ public class SivModeTest {
 				(byte) 0x43, (byte) 0x45, (byte) 0xc4, (byte) 0xa6, //
 				(byte) 0x23, (byte) 0xb2, (byte) 0xf0, (byte) 0x8f};
 
-		final byte[] result = new SivMode().generateKeyStream(ctrKey, ctr, 1);
+		final byte[] result = new SivMode().computeCtr(new byte[16], ctrKey, ctr);
 		Assertions.assertArrayEquals(expected, result);
 
-		final byte[] resultProvider = new SivMode(getSunJceProvider()).generateKeyStream(ctrKey, ctr, 1);
-		Assertions.assertArrayEquals(expected, resultProvider);
+		final byte[] sunJceResult = new SivMode(getSunJceProvider()).computeCtr(new byte[16], ctrKey, ctr);
+		Assertions.assertArrayEquals(expected, sunJceResult);
+
+		final byte[] bcResult = new SivMode(AESLightEngine::new).computeCtr(new byte[16], ctrKey, ctr);
+		Assertions.assertArrayEquals(expected, bcResult);
 	}
 
 	// CTR-AES https://tools.ietf.org/html/rfc5297#appendix-A.2
 	@Test
-	public void testGenerateKeyStream2() {
+	public void testComputeCtr2() {
 		final byte[] ctrKey = {(byte) 0x40, (byte) 0x41, (byte) 0x42, (byte) 0x43, //
 				(byte) 0x44, (byte) 0x45, (byte) 0x46, (byte) 0x47, //
 				(byte) 0x48, (byte) 0x49, (byte) 0x4a, (byte) 0x4b, //
@@ -197,7 +201,7 @@ public class SivModeTest {
 				(byte) 0x1b, (byte) 0x12, (byte) 0x34, (byte) 0x8e, //
 				(byte) 0xbc, (byte) 0x19, (byte) 0x5e, (byte) 0xc7};
 
-		final byte[] result = new SivMode().generateKeyStream(ctrKey, ctr, 3);
+		final byte[] result = new SivMode().computeCtr(new byte[48], ctrKey, ctr);
 		Assertions.assertArrayEquals(expected, result);
 	}
 

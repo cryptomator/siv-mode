@@ -3,25 +3,23 @@ package org.cryptomator.siv;
  * Copyright (c) 2015 Sebastian Stenzel
  * This file is licensed under the terms of the MIT license.
  * See the LICENSE.txt file for more info.
- * 
+ *
  * Contributors:
  *     Sebastian Stenzel - initial API and implementation
  ******************************************************************************/
 
-import java.nio.ByteBuffer;
-import java.security.Provider;
-import java.util.Arrays;
-
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.SecretKey;
-
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.Mac;
-import org.bouncycastle.crypto.engines.AESLightEngine;
 import org.bouncycastle.crypto.macs.CMac;
 import org.bouncycastle.crypto.paddings.ISO7816d4Padding;
 import org.bouncycastle.crypto.params.KeyParameter;
+
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.SecretKey;
+import java.nio.ByteBuffer;
+import java.security.Provider;
+import java.util.Arrays;
 
 /**
  * Implements the RFC 5297 SIV mode.
@@ -32,12 +30,13 @@ public final class SivMode {
 	private static final byte DOUBLING_CONST = (byte) 0x87;
 
 	private final ThreadLocal<BlockCipher> threadLocalCipher;
+	private final CtrComputer ctrComputer;
 
 	/**
 	 * Creates an AES-SIV instance using JCE's cipher implementation, which should normally be the best choice.<br>
-	 * 
-	 * For embedded systems, you might want to consider using {@link #SivMode(BlockCipherFactory)} with {@link AESLightEngine} instead.
-	 * 
+	 * <p>
+	 * For embedded systems, you might want to consider using {@link #SivMode(BlockCipherFactory)} with BouncyCastle's {@code AESLightEngine} instead.
+	 *
 	 * @see #SivMode(BlockCipherFactory)
 	 */
 	public SivMode() {
@@ -46,59 +45,62 @@ public final class SivMode {
 
 	/**
 	 * Creates an AES-SIV instance using a custom JCE's security provider<br>
-	 *
-	 * For embedded systems, you might want to consider using {@link #SivMode(BlockCipherFactory)} with {@link AESLightEngine} instead.
+	 * <p>
+	 * For embedded systems, you might want to consider using {@link #SivMode(BlockCipherFactory)} with BouncyCastle's {@code AESLightEngine} instead.
 	 *
 	 * @param jceSecurityProvider to use to create the internal {@link javax.crypto.Cipher} instance
-	 *
 	 * @see #SivMode(BlockCipherFactory)
 	 */
 	public SivMode(final Provider jceSecurityProvider) {
-		this(new BlockCipherFactory() {
-
-			@Override
-			public BlockCipher create() {
-				return new JceAesBlockCipher(jceSecurityProvider);
-			}
-
-		});
+		this(ThreadLocal.withInitial(() -> new JceAesBlockCipher(jceSecurityProvider)), new JceAesCtrComputer(jceSecurityProvider));
 	}
 
 	/**
 	 * Creates an instance using a specific Blockcipher.get(). If you want to use AES, just use the default constructor.
-	 * 
+	 *
 	 * @param cipherFactory A factory method creating a Blockcipher.get(). Must use a block size of 128 bits (16 bytes).
 	 */
 	public SivMode(final BlockCipherFactory cipherFactory) {
+		this(ThreadLocal.withInitial(() -> cipherFactory.create()));
+	}
+
+	private SivMode(final ThreadLocal<BlockCipher> threadLocalCipher) {
+		this(threadLocalCipher, new CustomCtrComputer(threadLocalCipher::get));
+	}
+	
+	private SivMode(final ThreadLocal<BlockCipher> threadLocalCipher, final CtrComputer ctrComputer) {
 		// Try using cipherFactory to check that the block size is valid.
 		// We assume here that the block size will not vary across calls to .create().
-		if (cipherFactory.create().getBlockSize() != 16) {
+		if (threadLocalCipher.get().getBlockSize() != 16) {
 			throw new IllegalArgumentException("cipherFactory must create BlockCipher objects with a 16-byte block size");
 		}
 
-		this.threadLocalCipher = new ThreadLocal<BlockCipher>() {
-
-			@Override
-			protected BlockCipher initialValue() {
-				return cipherFactory.create();
-			}
-
-		};
+		this.threadLocalCipher = threadLocalCipher;
+		this.ctrComputer = ctrComputer;
 	}
 
 	/**
 	 * Creates {@link BlockCipher}s.
 	 */
+	@FunctionalInterface
 	public interface BlockCipherFactory {
 		BlockCipher create();
 	}
 
 	/**
+	 * Performs CTR computations. 
+	 */
+	@FunctionalInterface
+	interface CtrComputer {
+		byte[] computeCtr(byte[] input, byte[] key, final byte[] iv);
+	}
+
+	/**
 	 * Convenience method, if you are using the javax.crypto API. This is just a wrapper for {@link #encrypt(byte[], byte[], byte[], byte[]...)}.
-	 * 
-	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param plaintext Your plaintext, which shall be encrypted.
+	 *
+	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param plaintext      Your plaintext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
 	 * @throws IllegalArgumentException if keys are invalid or {@link SecretKey#getEncoded()} is not supported.
@@ -119,10 +121,10 @@ public final class SivMode {
 
 	/**
 	 * Encrypts plaintext using SIV mode. A block cipher defined by the constructor is being used.<br>
-	 * 
-	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param plaintext Your plaintext, which shall be encrypted.
+	 *
+	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param plaintext      Your plaintext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
 	 * @throws IllegalArgumentException if the either of the two keys is of invalid length for the used {@link BlockCipher}.
@@ -134,10 +136,8 @@ public final class SivMode {
 		}
 
 		assert plaintext.length + 15 < Integer.MAX_VALUE;
-		final int numBlocks = (plaintext.length + 15) / 16;
 		final byte[] iv = s2v(macKey, plaintext, associatedData);
-		final byte[] keystream = generateKeyStream(ctrKey, iv, numBlocks);
-		final byte[] ciphertext = xor(plaintext, keystream);
+		final byte[] ciphertext = computeCtr(plaintext, ctrKey, iv);
 
 		// concat IV + ciphertext:
 		final byte[] result = new byte[iv.length + ciphertext.length];
@@ -148,15 +148,15 @@ public final class SivMode {
 
 	/**
 	 * Convenience method, if you are using the javax.crypto API. This is just a wrapper for {@link #decrypt(byte[], byte[], byte[], byte[]...)}.
-	 * 
-	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param ciphertext Your cipehrtext, which shall be decrypted.
+	 *
+	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param ciphertext     Your cipehrtext, which shall be decrypted.
 	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
-	 * @throws IllegalArgumentException If keys are invalid or {@link SecretKey#getEncoded()} is not supported.
+	 * @throws IllegalArgumentException       If keys are invalid or {@link SecretKey#getEncoded()} is not supported.
 	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
-	 * @throws IllegalBlockSizeException If the provided ciphertext is of invalid length.
+	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
 	 */
 	public byte[] decrypt(SecretKey ctrKey, SecretKey macKey, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		final byte[] ctrKeyBytes = ctrKey.getEncoded();
@@ -174,15 +174,15 @@ public final class SivMode {
 
 	/**
 	 * Decrypts ciphertext using SIV mode. A block cipher defined by the constructor is being used.<br>
-	 * 
-	 * @param ctrKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param macKey SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param ciphertext Your ciphertext, which shall be encrypted.
+	 *
+	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param ciphertext     Your ciphertext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
-	 * @throws IllegalArgumentException If the either of the two keys is of invalid length for the used {@link BlockCipher}.
+	 * @throws IllegalArgumentException       If the either of the two keys is of invalid length for the used {@link BlockCipher}.
 	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
-	 * @throws IllegalBlockSizeException If the provided ciphertext is of invalid length.
+	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
 	 */
 	public byte[] decrypt(byte[] ctrKey, byte[] macKey, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		if (ciphertext.length < 16) {
@@ -194,9 +194,7 @@ public final class SivMode {
 
 		assert actualCiphertext.length == ciphertext.length - 16;
 		assert actualCiphertext.length + 15 < Integer.MAX_VALUE;
-		final int numBlocks = (actualCiphertext.length + 15) / 16;
-		final byte[] keystream = generateKeyStream(ctrKey, iv, numBlocks);
-		final byte[] plaintext = xor(actualCiphertext, keystream);
+		final byte[] plaintext = computeCtr(actualCiphertext, ctrKey, iv);
 		final byte[] control = s2v(macKey, plaintext, associatedData);
 
 		// time-constant comparison (taken from MessageDigest.isEqual in JDK8)
@@ -212,26 +210,14 @@ public final class SivMode {
 			throw new UnauthenticCiphertextException("authentication in SIV decryption failed");
 		}
 	}
-
-	byte[] generateKeyStream(byte[] ctrKey, byte[] iv, int numBlocks) {
-		final byte[] keystream = new byte[numBlocks * 16];
-
+	
+	byte[] computeCtr(byte[] input, byte[] key, final byte[] iv) {
 		// clear out the 31st and 63rd (rightmost) bit:
-		final byte[] ctr = Arrays.copyOf(iv, 16);
-		ctr[8] = (byte) (ctr[8] & 0x7F);
-		ctr[12] = (byte) (ctr[12] & 0x7F);
-		final ByteBuffer ctrBuf = ByteBuffer.wrap(ctr);
-		final long initialCtrVal = ctrBuf.getLong(8);
-
-		final BlockCipher cipher = threadLocalCipher.get();
-		cipher.init(true, new KeyParameter(ctrKey));
-		for (int i = 0; i < numBlocks; i++) {
-			ctrBuf.putLong(8, initialCtrVal + i);
-			cipher.processBlock(ctr, 0, keystream, i * 16);
-			cipher.reset();
-		}
-
-		return keystream;
+		final byte[] adjustedIv = Arrays.copyOf(iv, 16);
+		adjustedIv[8] = (byte) (adjustedIv[8] & 0x7F);
+		adjustedIv[12] = (byte) (adjustedIv[12] & 0x7F);
+		
+		return ctrComputer.computeCtr(input, key, adjustedIv);
 	}
 
 	// Visible for testing, throws IllegalArgumentException if key is not accepted by CMac#init(CipherParameters)
@@ -245,6 +231,11 @@ public final class SivMode {
 		final CipherParameters params = new KeyParameter(macKey);
 		final CMac mac = new CMac(threadLocalCipher.get());
 		mac.init(params);
+		
+		// RFC 5297 defines a n == 0 case here. Where n is the length of the input vector:
+		// S1 = associatedData1, S2 = associatedData2, ... Sn = plaintext
+		// Since this method is invoked only by encrypt/decrypt, we always have a plaintext.
+		// Thus n > 0
 
 		byte[] d = mac(mac, BYTES_ZERO);
 
