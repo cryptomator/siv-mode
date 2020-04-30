@@ -163,8 +163,7 @@
 							<minimizeJar>true</minimizeJar>
 							<keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<createSourcesJar>true</createSourcesJar>
-							<shadeSourcesContent>true</shadeSourcesContent>
+							<createSourcesJar>false</createSourcesJar>
 							<artifactSet>
 								<includes>
 									<include>org.bouncycastle:bcprov-jdk15on</include>
