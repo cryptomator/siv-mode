@@ -30,6 +30,7 @@ public final class SivMode {
 	private static final byte DOUBLING_CONST = (byte) 0x87;
 
 	private final ThreadLocal<BlockCipher> threadLocalCipher;
+	private final CtrComputer ctrComputer;
 
 	/**
 	 * Creates an AES-SIV instance using JCE's cipher implementation, which should normally be the best choice.<br>
@@ -67,27 +68,38 @@ public final class SivMode {
 	 * @param cipherFactory A factory method creating a Blockcipher.get(). Must use a block size of 128 bits (16 bytes).
 	 */
 	public SivMode(final BlockCipherFactory cipherFactory) {
+		this(ThreadLocal.withInitial(() -> cipherFactory.create()));
+	}
+
+	private SivMode(final ThreadLocal<BlockCipher> threadLocalCipher) {
+		this(threadLocalCipher, new CustomCtrComputer(threadLocalCipher::get));
+	}
+	
+	private SivMode(final ThreadLocal<BlockCipher> threadLocalCipher, final CtrComputer ctrComputer) {
 		// Try using cipherFactory to check that the block size is valid.
 		// We assume here that the block size will not vary across calls to .create().
-		if (cipherFactory.create().getBlockSize() != 16) {
+		if (threadLocalCipher.get().getBlockSize() != 16) {
 			throw new IllegalArgumentException("cipherFactory must create BlockCipher objects with a 16-byte block size");
 		}
 
-		this.threadLocalCipher = new ThreadLocal<BlockCipher>() {
-
-			@Override
-			protected BlockCipher initialValue() {
-				return cipherFactory.create();
-			}
-
-		};
+		this.threadLocalCipher = threadLocalCipher;
+		this.ctrComputer = ctrComputer;
 	}
 
 	/**
 	 * Creates {@link BlockCipher}s.
 	 */
+	@FunctionalInterface
 	public interface BlockCipherFactory {
 		BlockCipher create();
+	}
+
+	/**
+	 * Performs CTR computations. 
+	 */
+	@FunctionalInterface
+	interface CtrComputer {
+		byte[] computeCtr(byte[] input, byte[] key, final byte[] iv);
 	}
 
 	/**
@@ -131,10 +143,8 @@ public final class SivMode {
 		}
 
 		assert plaintext.length + 15 < Integer.MAX_VALUE;
-		final int numBlocks = (plaintext.length + 15) / 16;
 		final byte[] iv = s2v(macKey, plaintext, associatedData);
-		final byte[] keystream = generateKeyStream(ctrKey, iv, numBlocks);
-		final byte[] ciphertext = xor(plaintext, keystream);
+		final byte[] ciphertext = computeCtr(plaintext, ctrKey, iv);
 
 		// concat IV + ciphertext:
 		final byte[] result = new byte[iv.length + ciphertext.length];
@@ -191,9 +201,7 @@ public final class SivMode {
 
 		assert actualCiphertext.length == ciphertext.length - 16;
 		assert actualCiphertext.length + 15 < Integer.MAX_VALUE;
-		final int numBlocks = (actualCiphertext.length + 15) / 16;
-		final byte[] keystream = generateKeyStream(ctrKey, iv, numBlocks);
-		final byte[] plaintext = xor(actualCiphertext, keystream);
+		final byte[] plaintext = computeCtr(actualCiphertext, ctrKey, iv);
 		final byte[] control = s2v(macKey, plaintext, associatedData);
 
 		// time-constant comparison (taken from MessageDigest.isEqual in JDK8)
@@ -209,26 +217,14 @@ public final class SivMode {
 			throw new UnauthenticCiphertextException("authentication in SIV decryption failed");
 		}
 	}
-
-	byte[] generateKeyStream(byte[] ctrKey, byte[] iv, int numBlocks) {
-		final byte[] keystream = new byte[numBlocks * 16];
-
+	
+	byte[] computeCtr(byte[] input, byte[] key, final byte[] iv) {
 		// clear out the 31st and 63rd (rightmost) bit:
-		final byte[] ctr = Arrays.copyOf(iv, 16);
-		ctr[8] = (byte) (ctr[8] & 0x7F);
-		ctr[12] = (byte) (ctr[12] & 0x7F);
-		final ByteBuffer ctrBuf = ByteBuffer.wrap(ctr);
-		final long initialCtrVal = ctrBuf.getLong(8);
-
-		final BlockCipher cipher = threadLocalCipher.get();
-		cipher.init(true, new KeyParameter(ctrKey));
-		for (int i = 0; i < numBlocks; i++) {
-			ctrBuf.putLong(8, initialCtrVal + i);
-			cipher.processBlock(ctr, 0, keystream, i * 16);
-			cipher.reset();
-		}
-
-		return keystream;
+		final byte[] adjustedIv = Arrays.copyOf(iv, 16);
+		adjustedIv[8] = (byte) (adjustedIv[8] & 0x7F);
+		adjustedIv[12] = (byte) (adjustedIv[12] & 0x7F);
+		
+		return ctrComputer.computeCtr(input, key, adjustedIv);
 	}
 
 	// Visible for testing, throws IllegalArgumentException if key is not accepted by CMac#init(CipherParameters)
