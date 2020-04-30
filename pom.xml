@@ -112,8 +112,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
 				<configuration>
-					<release>7</release>
-					<testRelease>8</testRelease>
+					<release>8</release>
 					<encoding>UTF-8</encoding>
 					<showWarnings>true</showWarnings>
 				</configuration>
@@ -194,31 +193,6 @@
 
 	<profiles>
 		<profile>
-			<id>intellij</id>
-			<!-- workaround for intellij bug: https://youtrack.jetbrains.com/issue/IDEA-85478 -->
-			<activation>
-				<activeByDefault>false</activeByDefault>
-				<property>
-					<name>idea.maven.embedder.version</name>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<version>3.8.1</version>
-						<configuration>
-							<release>8</release>
-							<source>1.8</source>
-							<target>1.8</target>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<profile>
 			<id>dependency-check</id>
 			<build>
 				<plugins>
@@ -297,9 +271,6 @@
 								</goals>
 							</execution>
 						</executions>
-						<configuration>
-							<release>7</release>
-						</configuration>
 					</plugin>
 				</plugins>
 			</build>
