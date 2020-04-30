@@ -52,14 +52,7 @@ public final class SivMode {
 	 * @see #SivMode(BlockCipherFactory)
 	 */
 	public SivMode(final Provider jceSecurityProvider) {
-		this(new BlockCipherFactory() {
-
-			@Override
-			public BlockCipher create() {
-				return new JceAesBlockCipher(jceSecurityProvider);
-			}
-
-		});
+		this(ThreadLocal.withInitial(() -> new JceAesBlockCipher(jceSecurityProvider)), new JceAesCtrComputer(jceSecurityProvider));
 	}
 
 	/**
