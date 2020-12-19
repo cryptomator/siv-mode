@@ -1,6 +1,6 @@
 # Java RFC 5297 SIV Authenticated Encryption
 
-[![Build Status](https://travis-ci.org/cryptomator/siv-mode.svg?branch=develop)](https://travis-ci.org/cryptomator/siv-mode)
+[![Build](https://github.com/cryptomator/siv-mode/workflows/Build/badge.svg)](https://github.com/cryptomator/siv-mode/actions?query=workflow%3ABuild)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/8b274788dab046259a40e56688236790)](https://www.codacy.com/app/cryptomator/siv-mode)
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/8b274788dab046259a40e56688236790)](https://www.codacy.com/app/cryptomator/siv-mode)
 [![Known Vulnerabilities](https://snyk.io/test/github/cryptomator/siv-mode/badge.svg)](https://snyk.io/test/github/cryptomator/siv-mode)
@@ -14,7 +14,8 @@
 - Defaults on AES, but supports any block cipher with a 128-bit block size.
 - Supports any key sizes that the block cipher supports (e.g. 128/192/256-bit keys for AES)
 - Thread-safe
-- Compatible with Android API Level 24 (since version 1.4.0)
+- [Fast](https://github.com/cryptomator/siv-mode/issues/15)
+- Requires JDK 8+ or Android API Level 24+ (since version 1.4.0)
 
 ## Audits
 - [Version 1.0.8 audit by Tim McLean](https://www.chosenplaintext.ca/publications/20161104-siv-mode-report.pdf) (Issues fixed with 1.1.0)
@@ -47,7 +48,7 @@ public void encryptWithAssociatedData() {
   <dependency>
     <groupId>org.cryptomator</groupId>
     <artifactId>siv-mode</artifactId>
-    <version>1.3.2</version>
+    <version>1.4.0</version>
   </dependency>
 </dependencies>
 ```
