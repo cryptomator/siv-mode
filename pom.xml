@@ -332,7 +332,7 @@
 				<repository>
 					<id>github</id>
 					<name>GitHub Packages</name>
-					<url>https://maven.pkg.github.com/cryptomator/webdav-nio-adapter</url>
+					<url>https://maven.pkg.github.com/cryptomator/siv-mode</url>
 				</repository>
 			</distributionManagement>
 		</profile>
