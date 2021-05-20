@@ -41,10 +41,10 @@
 
 		<!-- test dependencies -->
 		<junit.version>5.7.1</junit.version>
-		<mockito.version>3.7.7</mockito.version>
-		<jmh.version>1.27</jmh.version>
+		<mockito.version>3.10.0</mockito.version>
+		<jmh.version>1.31</jmh.version>
 		<hamcrest.version>2.2</hamcrest.version>
-		<guava.version>30.1-jre</guava.version>
+		<guava.version>30.1.1-jre</guava.version>
 	</properties>
 
 	<dependencies>
