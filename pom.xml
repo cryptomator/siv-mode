@@ -37,12 +37,12 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!-- dependencies -->
-		<bouncycastle.version>1.68</bouncycastle.version>
+		<bouncycastle.version>1.69</bouncycastle.version>
 
 		<!-- test dependencies -->
-		<junit.version>5.7.1</junit.version>
-		<mockito.version>3.10.0</mockito.version>
-		<jmh.version>1.31</jmh.version>
+		<junit.version>5.7.2</junit.version>
+		<mockito.version>3.11.2</mockito.version>
+		<jmh.version>1.32</jmh.version>
 		<hamcrest.version>2.2</hamcrest.version>
 		<guava.version>30.1.1-jre</guava.version>
 	</properties>
@@ -174,7 +174,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.2.0</version>
+				<version>3.3.0</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -235,7 +235,7 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>6.1.0</version>
+						<version>6.2.2</version>
 						<configuration>
 							<cveValidForHours>24</cveValidForHours>
 							<failBuildOnCVSS>0</failBuildOnCVSS>
@@ -259,7 +259,7 @@
 					<plugin>
 						<groupId>org.jacoco</groupId>
 						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>0.8.6</version>
+						<version>0.8.7</version>
 						<executions>
 							<execution>
 								<id>prepare-agent</id>
@@ -285,7 +285,7 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.6</version>
+						<version>3.0.1</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
