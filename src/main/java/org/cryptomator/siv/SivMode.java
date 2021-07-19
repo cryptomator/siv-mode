@@ -51,7 +51,7 @@ public final class SivMode {
 	 * @see #SivMode(BlockCipherFactory)
 	 */
 	public SivMode(final Provider jceSecurityProvider) {
-		this(ThreadLocal.withInitial(() -> new JceAesBlockCipher(jceSecurityProvider)), new JceAesCtrComputer(jceSecurityProvider));
+		this(ThreadLocals.withInitial(() -> new JceAesBlockCipher(jceSecurityProvider)), new JceAesCtrComputer(jceSecurityProvider));
 	}
 
 	/**
@@ -60,7 +60,7 @@ public final class SivMode {
 	 * @param cipherFactory A factory method creating a Blockcipher.get(). Must use a block size of 128 bits (16 bytes).
 	 */
 	public SivMode(final BlockCipherFactory cipherFactory) {
-		this(ThreadLocal.withInitial(() -> cipherFactory.create()));
+		this(ThreadLocals.withInitial(() -> cipherFactory.create()));
 	}
 
 	private SivMode(final ThreadLocal<BlockCipher> threadLocalCipher) {
