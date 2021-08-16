@@ -60,7 +60,7 @@ public final class SivMode {
 	 * @param cipherFactory A factory method creating a Blockcipher.get(). Must use a block size of 128 bits (16 bytes).
 	 */
 	public SivMode(final BlockCipherFactory cipherFactory) {
-		this(ThreadLocals.withInitial(() -> cipherFactory.create()));
+		this(ThreadLocals.withInitial(cipherFactory::create));
 	}
 
 	private SivMode(final ThreadLocal<BlockCipher> threadLocalCipher) {
@@ -83,6 +83,9 @@ public final class SivMode {
 	 */
 	@FunctionalInterface
 	public interface BlockCipherFactory {
+		/**
+		 * @return New {@link BlockCipher} instance
+		 */
 		BlockCipher create();
 	}
 
@@ -134,7 +137,6 @@ public final class SivMode {
 			throw new IllegalArgumentException("Plaintext is too long");
 		}
 
-		assert plaintext.length + 15 < Integer.MAX_VALUE;
 		final byte[] iv = s2v(macKey, plaintext, associatedData);
 		final byte[] ciphertext = computeCtr(plaintext, ctrKey, iv);
 
@@ -190,9 +192,6 @@ public final class SivMode {
 
 		final byte[] iv = Arrays.copyOf(ciphertext, 16);
 		final byte[] actualCiphertext = Arrays.copyOfRange(ciphertext, 16, ciphertext.length);
-
-		assert actualCiphertext.length == ciphertext.length - 16;
-		assert actualCiphertext.length + 15 < Integer.MAX_VALUE;
 		final byte[] plaintext = computeCtr(actualCiphertext, ctrKey, iv);
 		final byte[] control = s2v(macKey, plaintext, associatedData);
 

@@ -8,6 +8,7 @@ package org.cryptomator.siv;
  *     Sebastian Stenzel - initial API and implementation
  ******************************************************************************/
 
+import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.DataLengthException;
 import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -24,8 +25,9 @@ public class JceAesBlockCipherTest {
 	@Test
 	public void testInitWithNullParam() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
+		CipherParameters params = null;
 		IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-			cipher.init(true, null);
+			cipher.init(true, params);
 		});
 		MatcherAssert.assertThat(e.getMessage(), CoreMatchers.containsString("missing parameter of type KeyParameter"));
 	}
@@ -33,8 +35,9 @@ public class JceAesBlockCipherTest {
 	@Test
 	public void testInitWithMissingKey() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
+		CipherParameters params = new AsymmetricKeyParameter(true);
 		IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-			cipher.init(true, new AsymmetricKeyParameter(true));
+			cipher.init(true, params);
 		});
 		MatcherAssert.assertThat(e.getMessage(), CoreMatchers.containsString("missing parameter of type KeyParameter"));
 	}
@@ -42,8 +45,9 @@ public class JceAesBlockCipherTest {
 	@Test
 	public void testInitWithInvalidKey() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
+		CipherParameters params = new KeyParameter(new byte[7]);
 		IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-			cipher.init(true, new KeyParameter(new byte[7]));
+			cipher.init(true, params);
 		});
 		MatcherAssert.assertThat(e.getMessage(), CoreMatchers.containsString("Invalid key"));
 	}
@@ -51,25 +55,37 @@ public class JceAesBlockCipherTest {
 	@Test
 	public void testInitForEncryption() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
-		cipher.init(true, new KeyParameter(new byte[16]));
+		CipherParameters params = new KeyParameter(new byte[16]);
+		Assertions.assertDoesNotThrow(() -> {
+			cipher.init(true, params);
+		});
 	}
 
 	@Test
 	public void testInitForEncryptionWithProvider() {
         JceAesBlockCipher cipher = new JceAesBlockCipher(getSunJceProvider());
-		cipher.init(true, new KeyParameter(new byte[16]));
+		CipherParameters params = new KeyParameter(new byte[16]);
+		Assertions.assertDoesNotThrow(() -> {
+			cipher.init(true, params);
+		});
 	}
 
 	@Test
 	public void testInitForDecryption() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
-		cipher.init(false, new KeyParameter(new byte[16]));
+		CipherParameters params = new KeyParameter(new byte[16]);
+		Assertions.assertDoesNotThrow(() -> {
+			cipher.init(false, params);
+		});
 	}
 
 	@Test
 	public void testInitForDecryptionWithProvider() {
         JceAesBlockCipher cipher = new JceAesBlockCipher(getSunJceProvider());
-		cipher.init(false, new KeyParameter(new byte[16]));
+		CipherParameters params = new KeyParameter(new byte[16]);
+		Assertions.assertDoesNotThrow(() -> {
+			cipher.init(false, params);
+		});
 	}
 
     private Provider getSunJceProvider() {
@@ -144,14 +160,14 @@ public class JceAesBlockCipherTest {
     @Test
 	public void testResetBeforeInitDoesNotThrowExceptions() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
-		cipher.reset();
+		Assertions.assertDoesNotThrow(cipher::reset);
 	}
 
 	@Test
 	public void testResetAfterInitDoesNotThrowExceptions() {
 		JceAesBlockCipher cipher = new JceAesBlockCipher();
 		cipher.init(true, new KeyParameter(new byte[16]));
-		cipher.reset();
+		Assertions.assertDoesNotThrow(cipher::reset);
 	}
 
 }
