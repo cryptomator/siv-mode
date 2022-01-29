@@ -65,7 +65,7 @@ Because BouncyCastle classes are shaded, this library only depends on `java.base
 
 ## Building
 
-This is a Maven project. To build it, run `mvn clean install`.
+This is a Maven project. To build it, run `./mvnw clean install`.
 
 Requires JDK 11.0.3 or newer at build time due to JPMS support.
 
