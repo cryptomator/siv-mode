@@ -7,6 +7,12 @@ import javax.crypto.BadPaddingException;
  */
 public class UnauthenticCiphertextException extends BadPaddingException {
 
+	/**
+	 * Constructs a UnauthenticCiphertextException with the specified
+	 * detail message.
+	 *
+	 * @param message the detail message.
+	 */
 	public UnauthenticCiphertextException(String message) {
 		super(message);
 	}

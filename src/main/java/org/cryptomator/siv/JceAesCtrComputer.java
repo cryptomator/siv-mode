@@ -19,20 +19,17 @@ final class JceAesCtrComputer implements SivMode.CtrComputer {
 	private final ThreadLocal<Cipher> threadLocalCipher;
 	
 	public JceAesCtrComputer(final Provider jceSecurityProvider) {
-		this.threadLocalCipher = new ThreadLocal<Cipher>(){
-			@Override
-			protected Cipher initialValue() {
-				try {
-					if (jceSecurityProvider == null) {
-						return Cipher.getInstance("AES/CTR/NoPadding");
-					} else {
-						return Cipher.getInstance("AES/CTR/NoPadding", jceSecurityProvider);
-					}
-				} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-					throw new IllegalStateException("AES/CTR/NoPadding not available on this platform.", e);
+		this.threadLocalCipher = ThreadLocals.withInitial(() -> {
+			try {
+				if (jceSecurityProvider == null) {
+					return Cipher.getInstance("AES/CTR/NoPadding");
+				} else {
+					return Cipher.getInstance("AES/CTR/NoPadding", jceSecurityProvider);
 				}
+			} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+				throw new IllegalStateException("AES/CTR/NoPadding not available on this platform.", e);
 			}
-		};
+		});
 	}
 
 	@Override
