@@ -1,5 +1,6 @@
 module org.cryptomator.siv {
 	requires static org.bouncycastle.provider;
+	requires static org.jetbrains.annotations;
 
 	exports org.cryptomator.siv;
 	exports org.cryptomator.siv.org.bouncycastle.crypto;
