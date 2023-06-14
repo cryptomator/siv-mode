@@ -44,7 +44,7 @@
 		<mockito.version>3.12.4</mockito.version>
 		<jmh.version>1.34</jmh.version>
 		<hamcrest.version>2.2</hamcrest.version>
-		<guava.version>31.0.1-jre</guava.version>
+		<guava.version>32.0.0-jre</guava.version>
 	</properties>
 
 	<dependencies>
