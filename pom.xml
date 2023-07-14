@@ -45,7 +45,7 @@
 		<mockito.version>3.12.4</mockito.version>
 		<jmh.version>1.34</jmh.version>
 		<hamcrest.version>2.2</hamcrest.version>
-		<guava.version>31.0.1-jre</guava.version>
+		<guava.version>32.0.0-jre</guava.version>
 	</properties>
 
 	<dependencies>
@@ -55,6 +55,12 @@
 			<version>${bouncycastle.version}</version>
 			<!-- see maven-shade-plugin; we don't want this as a transitive dependency in other projects -->
 			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains</groupId>
+			<artifactId>annotations</artifactId>
+			<version>23.0.0</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<!-- Tests -->
