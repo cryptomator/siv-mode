@@ -15,8 +15,8 @@ jobs:
           ref: "refs/tags/${{ github.event.inputs.tag }}"
       - uses: actions/setup-java@v3
         with:
-          java-version: 18-ea
-          distribution: 'zulu'
+          java-version: 20
+          distribution: 'temurin'
           cache: 'maven'
           server-id: ossrh # Value of the distributionManagement/repository/id field of the pom.xml
           server-username: MAVEN_USERNAME # env variable for username in deploy
