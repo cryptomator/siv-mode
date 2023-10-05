@@ -40,11 +40,11 @@
 		<bouncycastle.version>1.70</bouncycastle.version>
 
 		<!-- test dependencies -->
-		<junit.version>5.8.2</junit.version>
-		<mockito.version>3.12.4</mockito.version>
-		<jmh.version>1.34</jmh.version>
+		<junit.version>5.10.0</junit.version>
+		<mockito.version>5.5.0</mockito.version>
+		<jmh.version>1.37</jmh.version>
 		<hamcrest.version>2.2</hamcrest.version>
-		<guava.version>32.0.0-jre</guava.version>
+		<guava.version>32.1.2-jre</guava.version>
 	</properties>
 
 	<dependencies>
@@ -58,7 +58,7 @@
 		<dependency>
 			<groupId>org.jetbrains</groupId>
 			<artifactId>annotations</artifactId>
-			<version>23.0.0</version>
+			<version>24.0.1</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -106,7 +106,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>3.4.1</version>
 				<executions>
 					<execution>
 						<id>enforce-java</id>
@@ -126,7 +126,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.9.0</version>
+				<version>3.11.0</version>
 				<configuration>
 					<release>8</release>
 					<encoding>UTF-8</encoding>
@@ -152,11 +152,11 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M5</version>
+				<version>3.1.2</version>
 			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.2.2</version>
+				<version>3.3.0</version>
 				<configuration>
 					<archive>
 						<manifestEntries>
@@ -168,7 +168,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.2.1</version>
+				<version>3.3.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -180,7 +180,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.1</version>
+				<version>3.6.0</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -195,7 +195,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.2.4</version>
+				<version>3.5.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -241,7 +241,7 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>8.3.1</version>
+						<version>8.4.0</version>
 						<configuration>
 							<cveValidForHours>24</cveValidForHours>
 							<failBuildOnCVSS>0</failBuildOnCVSS>
@@ -268,7 +268,7 @@
 					<plugin>
 						<groupId>org.jacoco</groupId>
 						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>0.8.7</version>
+						<version>0.8.10</version>
 						<executions>
 							<execution>
 								<id>prepare-agent</id>
@@ -294,7 +294,7 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>3.0.1</version>
+						<version>3.1.0</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -329,7 +329,7 @@
 					<plugin>
 						<groupId>org.sonatype.plugins</groupId>
 						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.8</version>
+						<version>1.6.13</version>
 						<extensions>true</extensions>
 						<configuration>
 							<serverId>ossrh</serverId>
