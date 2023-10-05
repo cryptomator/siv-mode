@@ -15,8 +15,10 @@ jobs:
           cache: 'maven'
           gpg-private-key: ${{ secrets.RELEASES_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
-      - name: Enforce project version ${{ github.event.release.tag_name }}
-        run: ./mvnw versions:set -B -DnewVersion=${{ github.event.release.tag_name }}
+      - name: Verify project version = ${{ github.event.release.tag_name }}
+        run: |
+          PROJECT_VERSION=$(./mvnw help:evaluate "-Dexpression=project.version" -q -DforceStdout)
+          test "$PROJECT_VERSION" = "${{ github.event.release.tag_name }}"
       - name: Deploy
         run: ./mvnw deploy -B -DskipTests -Psign,deploy-github --no-transfer-progress
         env:
