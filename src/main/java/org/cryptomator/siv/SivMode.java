@@ -85,6 +85,8 @@ public final class SivMode {
 	@FunctionalInterface
 	public interface BlockCipherFactory {
 		/**
+		 * Creates a new {@link BlockCipher}.
+		 *
 		 * @return New {@link BlockCipher} instance
 		 */
 		BlockCipher create();
