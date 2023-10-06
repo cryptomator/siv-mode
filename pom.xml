@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cryptomator</groupId>
 	<artifactId>siv-mode</artifactId>
-	<version>1.4.4</version>
+	<version>1.5.0</version>
 
 	<name>SIV Mode</name>
 	<description>RFC 5297 SIV mode: deterministic authenticated encryption</description>
@@ -35,16 +35,17 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.build.outputTimestamp>2023-10-06T15:38:57Z</project.build.outputTimestamp>
 
 		<!-- dependencies -->
 		<bouncycastle.version>1.70</bouncycastle.version>
 
 		<!-- test dependencies -->
-		<junit.version>5.8.2</junit.version>
-		<mockito.version>3.12.4</mockito.version>
-		<jmh.version>1.34</jmh.version>
+		<junit.version>5.10.0</junit.version>
+		<mockito.version>5.5.0</mockito.version>
+		<jmh.version>1.37</jmh.version>
 		<hamcrest.version>2.2</hamcrest.version>
-		<guava.version>31.0.1-jre</guava.version>
+		<guava.version>32.1.2-jre</guava.version>
 	</properties>
 
 	<dependencies>
@@ -54,6 +55,12 @@
 			<version>${bouncycastle.version}</version>
 			<!-- see maven-shade-plugin; we don't want this as a transitive dependency in other projects -->
 			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains</groupId>
+			<artifactId>annotations</artifactId>
+			<version>24.0.1</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<!-- Tests -->
@@ -98,9 +105,14 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<version>2.9.0</version>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>3.4.1</version>
 				<executions>
 					<execution>
 						<id>enforce-java</id>
@@ -110,8 +122,9 @@
 						<configuration>
 							<rules>
 								<requireJavaVersion>
-									<message>You need at least JDK 11.0.3 to build this project.</message>
-									<version>[11.0.3,)</version>
+									<!-- In order to create a reproducible build, see https://bugs.openjdk.java.net/browse/JDK-8258117 -->
+									<message>You need at least JDK 18 to build this project.</message>
+									<version>[18,)</version>
 								</requireJavaVersion>
 							</rules>
 						</configuration>
@@ -120,7 +133,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.9.0</version>
+				<version>3.11.0</version>
 				<configuration>
 					<release>8</release>
 					<encoding>UTF-8</encoding>
@@ -146,11 +159,11 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M5</version>
+				<version>3.1.2</version>
 			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.2.2</version>
+				<version>3.3.0</version>
 				<configuration>
 					<archive>
 						<manifestEntries>
@@ -162,7 +175,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.2.1</version>
+				<version>3.3.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -174,7 +187,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.3.1</version>
+				<version>3.6.0</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -184,12 +197,17 @@
 					</execution>
 				</executions>
 				<configuration>
+					<!-- javadoc on JDK 21 ignores locale option, which is advised for reproducible builds -->
+					<additionalJOptions>
+						<additionalJOption>-J-Duser.language=en</additionalJOption>
+						<additionalJOption>-J-Duser.country=US</additionalJOption>
+					</additionalJOptions>
 					<release>8</release>
 				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.2.4</version>
+				<version>3.5.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -235,10 +253,13 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>6.5.3</version>
+						<version>8.4.0</version>
 						<configuration>
 							<cveValidForHours>24</cveValidForHours>
 							<failBuildOnCVSS>0</failBuildOnCVSS>
+							<skipTestScope>true</skipTestScope>
+							<detail>true</detail>
+							<suppressionFile>suppression.xml</suppressionFile>
 						</configuration>
 						<executions>
 							<execution>
@@ -259,7 +280,7 @@
 					<plugin>
 						<groupId>org.jacoco</groupId>
 						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>0.8.7</version>
+						<version>0.8.10</version>
 						<executions>
 							<execution>
 								<id>prepare-agent</id>
@@ -285,7 +306,7 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>3.0.1</version>
+						<version>3.1.0</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
@@ -320,7 +341,7 @@
 					<plugin>
 						<groupId>org.sonatype.plugins</groupId>
 						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.6.8</version>
+						<version>1.6.13</version>
 						<extensions>true</extensions>
 						<configuration>
 							<serverId>ossrh</serverId>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This file lists false positives found by org.owasp:dependency-check-maven build plugin -->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+	<suppress>
+		<notes><![CDATA[
+        vulnerable code neither used nor exposed (and removed during repackaging)
+        ]]></notes>
+		<gav regex="true">org\.bouncycastle:bcprov-jdk15on:.*</gav>
+		<cve>CVE-2023-33201</cve>
+	</suppress>
+</suppressions>

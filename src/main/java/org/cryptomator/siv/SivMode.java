@@ -14,6 +14,7 @@ import org.bouncycastle.crypto.Mac;
 import org.bouncycastle.crypto.macs.CMac;
 import org.bouncycastle.crypto.paddings.ISO7816d4Padding;
 import org.bouncycastle.crypto.params.KeyParameter;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.SecretKey;
@@ -84,6 +85,8 @@ public final class SivMode {
 	@FunctionalInterface
 	public interface BlockCipherFactory {
 		/**
+		 * Creates a new {@link BlockCipher}.
+		 *
 		 * @return New {@link BlockCipher} instance
 		 */
 		BlockCipher create();
@@ -208,7 +211,8 @@ public final class SivMode {
 			throw new UnauthenticCiphertextException("authentication in SIV decryption failed");
 		}
 	}
-	
+
+	@VisibleForTesting
 	byte[] computeCtr(byte[] input, byte[] key, final byte[] iv) {
 		// clear out the 31st and 63rd (rightmost) bit:
 		final byte[] adjustedIv = Arrays.copyOf(iv, 16);
@@ -218,8 +222,8 @@ public final class SivMode {
 		return ctrComputer.computeCtr(input, key, adjustedIv);
 	}
 
-	// Visible for testing, throws IllegalArgumentException if key is not accepted by CMac#init(CipherParameters)
-	byte[] s2v(byte[] macKey, byte[] plaintext, byte[]... associatedData) {
+	@VisibleForTesting
+	byte[] s2v(byte[] macKey, byte[] plaintext, byte[]... associatedData) throws IllegalArgumentException {
 		// Maximum permitted AD length is the block size in bits - 2
 		if (associatedData.length > 126) {
 			// SIV mode cannot be used safely with this many AD fields
@@ -266,6 +270,7 @@ public final class SivMode {
 	}
 
 	// Code taken from {@link org.bouncycastle.crypto.macs.CMac}
+	@VisibleForTesting
 	static int shiftLeft(byte[] block, byte[] output) {
 		int i = block.length;
 		int bit = 0;
@@ -278,6 +283,7 @@ public final class SivMode {
 	}
 
 	// Code taken from {@link org.bouncycastle.crypto.macs.CMac}
+	@VisibleForTesting
 	static byte[] dbl(byte[] in) {
 		byte[] ret = new byte[in.length];
 		int carry = shiftLeft(in, ret);
@@ -292,6 +298,7 @@ public final class SivMode {
 		return ret;
 	}
 
+	@VisibleForTesting
 	static byte[] xor(byte[] in1, byte[] in2) {
 		assert in1.length <= in2.length : "Length of first input must be <= length of second input.";
 		final byte[] result = new byte[in1.length];
@@ -301,6 +308,7 @@ public final class SivMode {
 		return result;
 	}
 
+	@VisibleForTesting
 	static byte[] xorend(byte[] in1, byte[] in2) {
 		assert in1.length >= in2.length : "Length of first input must be >= length of second input.";
 		final byte[] result = Arrays.copyOf(in1, in1.length);
