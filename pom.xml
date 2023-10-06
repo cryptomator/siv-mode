@@ -35,6 +35,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.build.outputTimestamp>2000-01-01T00:00:00Z</project.build.outputTimestamp>
 
 		<!-- dependencies -->
 		<bouncycastle.version>1.70</bouncycastle.version>
@@ -104,6 +105,11 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<version>2.9.0</version>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
 				<version>3.4.1</version>
@@ -116,8 +122,9 @@
 						<configuration>
 							<rules>
 								<requireJavaVersion>
-									<message>You need at least JDK 11.0.3 to build this project.</message>
-									<version>[11.0.3,)</version>
+									<!-- In order to create a reproducible build, see https://bugs.openjdk.java.net/browse/JDK-8258117 -->
+									<message>You need at least JDK 18 to build this project.</message>
+									<version>[18,)</version>
 								</requireJavaVersion>
 							</rules>
 						</configuration>
@@ -190,6 +197,11 @@
 					</execution>
 				</executions>
 				<configuration>
+					<!-- javadoc on JDK 21 ignores locale option, which is advised for reproducible builds -->
+					<additionalJOptions>
+						<additionalJOption>-J-Duser.language=en</additionalJOption>
+						<additionalJOption>-J-Duser.country=US</additionalJOption>
+					</additionalJOptions>
 					<release>8</release>
 				</configuration>
 			</plugin>
