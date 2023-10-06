@@ -54,7 +54,7 @@ jobs:
         with:
           token: ${{ secrets.CRYPTOBOT_RELEASE_TOKEN }}
           body: |-
-            ## Maven Coordinates
+            ### Maven Coordinates
             ```xml
               <dependency>
                 <groupId>org.cryptomator</groupId>
@@ -63,10 +63,10 @@ jobs:
               </dependency>
             ```
 
-            ## Artifact Checksums
+            ### Artifact Checksums
             ```txt
             ${{ steps.checksums.outputs.sha256 }}
             ```
 
-            See [README.md](../#reproducible-builds) section regarding reproducing this build.
+            See [README.md](https://github.com/cryptomator/siv-mode/#reproducible-builds) section regarding reproducing this build.
           generate_release_notes: true
