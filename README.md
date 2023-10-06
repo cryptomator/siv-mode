@@ -53,7 +53,7 @@ public void encryptWithAssociatedData() {
 </dependencies>
 ```
 
-## JPMS
+## Java Module
 
 From version 1.3.2 onwards this library is an explicit module with the name `org.cryptomator.siv`. You can use it by adding the following line to your `module-info.java`.
 
@@ -63,11 +63,15 @@ requires org.cryptomator.siv;
 
 Because BouncyCastle classes are shaded, this library only depends on `java.base`.
 
-## Building
+## Reproducible Builds
 
-This is a Maven project. To build it, run `./mvnw clean install`.
+This is a Maven project that can be built using `mvn install`. However, if you want to build this reproducibly, please make sure:
 
-Requires JDK 11.0.3 or newer at build time due to JPMS support.
+1. Use the same build environment
+    * The same [JDK as our CI builds](https://github.com/cryptomator/siv-mode/blob/develop/.github/workflows/build.yml#L15-L16)
+    * Ideally the same same arch and OS (x86_64 Linux)
+    * Same locale (en_US) and linebreaks (POSIX)
+2. Use `./mvnw install` instead (or `./mvnw verify` or `./mvnw package -DskipTests`, depending on your intentions)
 
 ## License
 Distributed under the MIT X Consortium license. See the LICENSE file for more info.
