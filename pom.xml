@@ -197,6 +197,11 @@
 					</execution>
 				</executions>
 				<configuration>
+					<!-- javadoc on JDK 21 ignores locale option, which is advised for reproducible builds -->
+					<additionalJOptions>
+						<additionalJOption>-J-Duser.language=en</additionalJOption>
+						<additionalJOption>-J-Duser.country=US</additionalJOption>
+					</additionalJOptions>
 					<release>8</release>
 				</configuration>
 			</plugin>
