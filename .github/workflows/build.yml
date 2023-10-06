@@ -43,8 +43,11 @@ jobs:
       - name: Calculate Checksums
         id: checksums
         run: |
-          SHA256SUMS=$(shasum -a256 target/*.jar)
-          echo "sha256=${SHA256SUMS}" >> $GITHUB_OUTPUT
+          {
+            echo 'sha256<<EOF'
+            shasum -a256 target/*.jar
+            echo EOF
+          } >> $GITHUB_OUTPUT
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
