@@ -28,7 +28,7 @@ jobs:
           ./mvnw -B verify
           jacoco:report
           org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-          -Pcoverage,dependency-check
+          -Pcoverage
           -Dsonar.projectKey=cryptomator_siv-mode
           -Dsonar.organization=cryptomator
           -Dsonar.host.url=https://sonarcloud.io
