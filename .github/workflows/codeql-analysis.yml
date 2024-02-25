@@ -33,12 +33,12 @@ jobs:
       with:
         languages: java
         config: |
-        queries:
-          - uses: security-and-quality
-        paths:
-          - src
-        paths-ignore: 
-          - src/test/go
+          queries:
+            - uses: security-and-quality
+          paths:
+            - src
+          paths-ignore: 
+            - src/test/go
     - name: Build
       run: ./mvnw -B install -DskipTests
     - name: Perform CodeQL Analysis
