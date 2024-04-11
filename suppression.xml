@@ -8,4 +8,12 @@
 		<gav regex="true">org\.bouncycastle:bcprov-jdk15on:.*</gav>
 		<cve>CVE-2023-33201</cve>
 	</suppress>
+	<suppress>
+   		<notes><![CDATA[
+   	file name: bcprov-jdk15on-1.70.jar
+	Reason: PEMParser is not used
+   	]]></notes>
+   		<packageUrl regex="true">^pkg:maven/org\.bouncycastle/bcprov\-jdk15on@.*$</packageUrl>
+   		<cve>CVE-2023-33202</cve>
+	</suppress>
 </suppressions>
