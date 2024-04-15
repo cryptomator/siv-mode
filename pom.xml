@@ -224,7 +224,7 @@
 							<createSourcesJar>false</createSourcesJar>
 							<artifactSet>
 								<includes>
-									<include>org.bouncycastle:bcprov-jdk15on</include>
+									<include>org.bouncycastle:bcprov-jdk18on</include>
 								</includes>
 							</artifactSet>
 							<relocations>
@@ -235,7 +235,7 @@
 							</relocations>
 							<filters>
 								<filter>
-									<artifact>org.bouncycastle:bcprov-jdk15on</artifact>
+									<artifact>org.bouncycastle:bcprov-jdk18on</artifact>
 									<excludes>
 										<exclude>META-INF/**</exclude>
 									</excludes>
