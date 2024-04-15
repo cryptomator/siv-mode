@@ -48,7 +48,7 @@
 		<guava.version>33.0.0-jre</guava.version>
 
 		<!-- maven plugins -->
-		<dependency-check.version>9.0.9</dependency-check.version>
+		<dependency-check.version>9.1.0</dependency-check.version>
 	</properties>
 
 	<dependencies>
@@ -136,7 +136,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.12.1</version>
+				<version>3.13.0</version>
 				<configuration>
 					<release>8</release>
 					<encoding>UTF-8</encoding>
@@ -210,7 +210,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.5.1</version>
+				<version>3.5.2</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -311,7 +311,7 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>3.1.0</version>
+						<version>3.2.2</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
