@@ -5,38 +5,37 @@ jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           java-version: 21
           distribution: 'zulu'
           cache: 'maven'
       - name: Cache SonarCloud packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       - name: Ensure to use tagged version
         if: startsWith(github.ref, 'refs/tags/')
-        run: ./mvnw versions:set --file ./pom.xml -DnewVersion=${GITHUB_REF##*/}
+        run: ./mvnw -B versions:set --file ./pom.xml -DnewVersion=${GITHUB_REF##*/}
       - name: Build and Test
         run: >
           ./mvnw -B verify
           jacoco:report
           org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
-          -Pcoverage,dependency-check
+          -Pcoverage
           -Dsonar.projectKey=cryptomator_siv-mode
           -Dsonar.organization=cryptomator
           -Dsonar.host.url=https://sonarcloud.io
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: artifacts
           path: target/*.jar
@@ -50,11 +49,11 @@ jobs:
           } >> $GITHUB_OUTPUT
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.CRYPTOBOT_RELEASE_TOKEN }}
           body: |-
-            ## Maven Coordinates
+            ### Maven Coordinates
             ```xml
               <dependency>
                 <groupId>org.cryptomator</groupId>
@@ -63,10 +62,10 @@ jobs:
               </dependency>
             ```
 
-            ## Artifact Checksums
+            ### Artifact Checksums
             ```txt
             ${{ steps.checksums.outputs.sha256 }}
             ```
 
-            See [README.md](../#reproducible-builds) section regarding reproducing this build.
+            See [README.md](https://github.com/cryptomator/siv-mode/#reproducible-builds) section regarding reproducing this build.
           generate_release_notes: true

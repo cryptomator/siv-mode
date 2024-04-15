@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cryptomator</groupId>
 	<artifactId>siv-mode</artifactId>
-	<version>1.5.0</version>
+	<version>1.5.1</version>
 
 	<name>SIV Mode</name>
 	<description>RFC 5297 SIV mode: deterministic authenticated encryption</description>
@@ -35,23 +35,26 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.outputTimestamp>2023-10-06T15:38:57Z</project.build.outputTimestamp>
+		<project.build.outputTimestamp>2024-04-15T10:23:33Z</project.build.outputTimestamp>
 
 		<!-- dependencies -->
-		<bouncycastle.version>1.70</bouncycastle.version>
+		<bouncycastle.version>1.78</bouncycastle.version>
 
 		<!-- test dependencies -->
-		<junit.version>5.10.0</junit.version>
-		<mockito.version>5.5.0</mockito.version>
+		<junit.version>5.10.2</junit.version>
+		<mockito.version>5.11.0</mockito.version>
 		<jmh.version>1.37</jmh.version>
 		<hamcrest.version>2.2</hamcrest.version>
-		<guava.version>32.1.2-jre</guava.version>
+		<guava.version>33.1.0-jre</guava.version>
+
+		<!-- maven plugins -->
+		<dependency-check.version>9.1.0</dependency-check.version>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk15on</artifactId>
+			<artifactId>bcprov-jdk18on</artifactId>
 			<version>${bouncycastle.version}</version>
 			<!-- see maven-shade-plugin; we don't want this as a transitive dependency in other projects -->
 			<optional>true</optional>
@@ -59,7 +62,7 @@
 		<dependency>
 			<groupId>org.jetbrains</groupId>
 			<artifactId>annotations</artifactId>
-			<version>24.0.1</version>
+			<version>24.1.0</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -107,7 +110,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.9.0</version>
+				<version>2.16.2</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -133,7 +136,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.11.0</version>
+				<version>3.13.0</version>
 				<configuration>
 					<release>8</release>
 					<encoding>UTF-8</encoding>
@@ -159,7 +162,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.1.2</version>
+				<version>3.2.5</version>
 			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -187,7 +190,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.6.0</version>
+				<version>3.6.3</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -207,7 +210,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.5.1</version>
+				<version>3.5.2</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -253,19 +256,21 @@
 					<plugin>
 						<groupId>org.owasp</groupId>
 						<artifactId>dependency-check-maven</artifactId>
-						<version>8.4.0</version>
+						<version>${dependency-check.version}</version>
 						<configuration>
-							<cveValidForHours>24</cveValidForHours>
+							<nvdValidForHours>24</nvdValidForHours>
 							<failBuildOnCVSS>0</failBuildOnCVSS>
 							<skipTestScope>true</skipTestScope>
 							<detail>true</detail>
 							<suppressionFile>suppression.xml</suppressionFile>
+							<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
 						</configuration>
 						<executions>
 							<execution>
 								<goals>
 									<goal>check</goal>
 								</goals>
+								<phase>validate</phase>
 							</execution>
 						</executions>
 					</plugin>
@@ -280,7 +285,7 @@
 					<plugin>
 						<groupId>org.jacoco</groupId>
 						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>0.8.10</version>
+						<version>0.8.11</version>
 						<executions>
 							<execution>
 								<id>prepare-agent</id>
@@ -306,7 +311,7 @@
 				<plugins>
 					<plugin>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>3.1.0</version>
+						<version>3.2.2</version>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
