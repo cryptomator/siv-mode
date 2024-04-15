@@ -16,4 +16,24 @@
    		<packageUrl regex="true">^pkg:maven/org\.bouncycastle/bcprov\-jdk15on@.*$</packageUrl>
    		<cve>CVE-2023-33202</cve>
 	</suppress>
+	<suppress>
+   		<notes>
+			<![CDATA[
+   			file name: bcprov-jdk15on-1.70.jar
+			Library does not use asymmetric cryptograhpy
+   			]]>
+		</notes>
+   		<packageUrl regex="true">^pkg:maven/org\.bouncycastle/bcprov\-jdk15on@.*$</packageUrl>
+   		<vulnerabilityName>CVE-2024-29857</vulnerabilityName>
+	</suppress>
+	<suppress>
+   		<notes>
+			<![CDATA[
+   			file name: bcprov-jdk15on-1.70.jar
+			Library does not use asymmetric cryptograhpy
+   			]]>
+		</notes>
+   		<packageUrl regex="true">^pkg:maven/org\.bouncycastle/bcprov\-jdk15on@.*$</packageUrl>
+   		<vulnerabilityName>CVE-2024-30171</vulnerabilityName>
+	</suppress>
 </suppressions>
