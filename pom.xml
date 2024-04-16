@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cryptomator</groupId>
 	<artifactId>siv-mode</artifactId>
-	<version>1.5.1</version>
+	<version>1.5.2</version>
 
 	<name>SIV Mode</name>
 	<description>RFC 5297 SIV mode: deterministic authenticated encryption</description>
@@ -35,7 +35,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.outputTimestamp>2024-04-15T10:23:33Z</project.build.outputTimestamp>
+		<project.build.outputTimestamp>2024-04-16T12:32:12Z</project.build.outputTimestamp>
 
 		<!-- dependencies -->
 		<bouncycastle.version>1.78</bouncycastle.version>
@@ -224,7 +224,7 @@
 							<createSourcesJar>false</createSourcesJar>
 							<artifactSet>
 								<includes>
-									<include>org.bouncycastle:bcprov-jdk15on</include>
+									<include>org.bouncycastle:bcprov-jdk18on</include>
 								</includes>
 							</artifactSet>
 							<relocations>
@@ -235,7 +235,7 @@
 							</relocations>
 							<filters>
 								<filter>
-									<artifact>org.bouncycastle:bcprov-jdk15on</artifact>
+									<artifact>org.bouncycastle:bcprov-jdk18on</artifact>
 									<excludes>
 										<exclude>META-INF/**</exclude>
 									</excludes>
