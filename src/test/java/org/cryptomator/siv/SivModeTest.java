@@ -18,6 +18,8 @@ import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import javax.crypto.IllegalBlockSizeException;
@@ -67,6 +69,17 @@ public class SivModeTest {
 	}
 
 	@Test
+	public void testEncryptWithInvalidKey3() {
+		SecretKey key = Mockito.mock(SecretKey.class);
+		Mockito.when(key.getEncoded()).thenReturn(new byte[13]);
+
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			sivMode.encrypt(key, new byte[10]);
+		});
+	}
+
+	@Test
 	public void testInvalidCipher1() {
 		BlockCipherFactory factory = () -> null;
 
@@ -108,6 +121,17 @@ public class SivModeTest {
 		SivMode sivMode = new SivMode();
 		Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			sivMode.decrypt(key1, key2, new byte[10]);
+		});
+	}
+
+	@Test
+	public void testDecryptWithInvalidKey3() {
+		SecretKey key = Mockito.mock(SecretKey.class);
+		Mockito.when(key.getEncoded()).thenReturn(new byte[13]);
+
+		SivMode sivMode = new SivMode();
+		Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			sivMode.decrypt(key, new byte[10]);
 		});
 	}
 
@@ -437,15 +461,28 @@ public class SivModeTest {
 		Assertions.assertArrayEquals(expected, result);
 	}
 
-	@Test
-	public void testEncryptionAndDecryptionUsingJavaxCryptoApi() throws UnauthenticCiphertextException, IllegalBlockSizeException {
-		final byte[] dummyKey = new byte[16];
+	@ParameterizedTest
+	@ValueSource(ints = {16, 24, 32})
+	public void testEncryptionAndDecryptionUsingJavaxCryptoApi(int keylen) throws UnauthenticCiphertextException, IllegalBlockSizeException {
+		final byte[] dummyKey = new byte[keylen];
 		final SecretKey ctrKey = new SecretKeySpec(dummyKey, "AES");
 		final SecretKey macKey = new SecretKeySpec(dummyKey, "AES");
 		final SivMode sivMode = new SivMode();
 		final byte[] cleartext = "hello world".getBytes();
 		final byte[] ciphertext = sivMode.encrypt(ctrKey, macKey, cleartext);
 		final byte[] decrypted = sivMode.decrypt(ctrKey, macKey, ciphertext);
+		Assertions.assertArrayEquals(cleartext, decrypted);
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = {32, 48, 64})
+	public void testEncryptionAndDecryptionUsingSingleJavaxCryptoApi(int keylen) throws UnauthenticCiphertextException, IllegalBlockSizeException {
+		final byte[] dummyKey = new byte[keylen];
+		final SecretKey key = new SecretKeySpec(dummyKey, "AES");
+		final SivMode sivMode = new SivMode();
+		final byte[] cleartext = "hello world".getBytes();
+		final byte[] ciphertext = sivMode.encrypt(key, cleartext);
+		final byte[] decrypted = sivMode.decrypt(key, ciphertext);
 		Assertions.assertArrayEquals(cleartext, decrypted);
 	}
 
