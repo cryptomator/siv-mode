@@ -103,8 +103,8 @@ public final class SivMode {
 	/**
 	 * Convenience method, if you are using the javax.crypto API. This is just a wrapper for {@link #encrypt(byte[], byte[], byte[], byte[]...)}.
 	 *
-	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is split in half. See <a href="https://tools.ietf.org/html/rfc5297#section-2.2">RFC 5297 Section 2.2</a>
+	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is split in half. See <a href="https://tools.ietf.org/html/rfc5297#section-2.2">RFC 5297 Section 2.2</a>
 	 * @param plaintext      Your plaintext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
@@ -127,8 +127,8 @@ public final class SivMode {
 	/**
 	 * Encrypts plaintext using SIV mode. A block cipher defined by the constructor is being used.<br>
 	 *
-	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is split in half. See <a href="https://tools.ietf.org/html/rfc5297#section-2.2">RFC 5297 Section 2.2</a>
+	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is split in half. See <a href="https://tools.ietf.org/html/rfc5297#section-2.2">RFC 5297 Section 2.2</a>
 	 * @param plaintext      Your plaintext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
@@ -153,8 +153,8 @@ public final class SivMode {
 	/**
 	 * Convenience method, if you are using the javax.crypto API. This is just a wrapper for {@link #decrypt(byte[], byte[], byte[], byte[]...)}.
 	 *
-	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is split in half. See <a href="https://tools.ietf.org/html/rfc5297#section-2.2">RFC 5297 Section 2.2</a>
+	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is split in half. See <a href="https://tools.ietf.org/html/rfc5297#section-2.2">RFC 5297 Section 2.2</a>
 	 * @param ciphertext     Your cipehrtext, which shall be decrypted.
 	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
@@ -179,8 +179,8 @@ public final class SivMode {
 	/**
 	 * Decrypts ciphertext using SIV mode. A block cipher defined by the constructor is being used.<br>
 	 *
-	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
-	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is splitted in half. See https://tools.ietf.org/html/rfc5297#section-2.2
+	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is split in half. See <a href="https://tools.ietf.org/html/rfc5297#section-2.2">RFC 5297 Section 2.2</a>
+	 * @param macKey         SIV mode requires two separate keys. You can use one long key, which is split in half. See <a href="https://tools.ietf.org/html/rfc5297#section-2.2">RFC 5297 Section 2.2</a>
 	 * @param ciphertext     Your ciphertext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
