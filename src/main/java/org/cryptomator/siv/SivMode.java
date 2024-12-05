@@ -101,6 +101,33 @@ public final class SivMode {
 	}
 
 	/**
+	 * Convenience method using a single 256, 384, or 512 bits key. This is just a wrapper for {@link #encrypt(byte[], byte[], byte[], byte[]...)}.
+	 * @param key Combined key, which is split in half.
+	 * @param plaintext Your plaintext, which shall be encrypted.
+	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
+	 * @return IV + Ciphertext as a concatenated byte array.
+	 */
+	public byte[] encrypt(SecretKey key, byte[] plaintext, byte[]... associatedData) {
+		final byte[] keyBytes = key.getEncoded();
+		if (keyBytes.length != 64 && keyBytes.length != 48 && keyBytes.length != 32) {
+			throw new IllegalArgumentException("Key length must be 256, 384, or 512 bits.");
+		}
+		final int subkeyLen = keyBytes.length / 2;
+		assert subkeyLen == 32 || subkeyLen == 24 || subkeyLen == 16;
+		final byte[] macKey = new byte[subkeyLen];
+		final byte[] ctrKey = new byte[subkeyLen];
+		try {
+			System.arraycopy(keyBytes, 0, macKey, 0, macKey.length); // K1 = leftmost(K, len(K)/2);
+			System.arraycopy(keyBytes, macKey.length, ctrKey, 0, ctrKey.length); // K2 = rightmost(K, len(K)/2);
+			return encrypt(ctrKey, macKey, plaintext, associatedData);
+		} finally {
+			Arrays.fill(macKey, (byte) 0);
+			Arrays.fill(ctrKey, (byte) 0);
+			Arrays.fill(keyBytes, (byte) 0);
+		}
+	}
+
+	/**
 	 * Convenience method, if you are using the javax.crypto API. This is just a wrapper for {@link #encrypt(byte[], byte[], byte[], byte[]...)}.
 	 *
 	 * @param ctrKey         SIV mode requires two separate keys. You can use one long key, which is split in half. See <a href="https://tools.ietf.org/html/rfc5297#section-2.2">RFC 5297 Section 2.2</a>
@@ -148,6 +175,36 @@ public final class SivMode {
 		System.arraycopy(iv, 0, result, 0, iv.length);
 		System.arraycopy(ciphertext, 0, result, iv.length, ciphertext.length);
 		return result;
+	}
+
+	/**
+	 * Convenience method using a single 256, 384, or 512 bits key. This is just a wrapper for {@link #decrypt(byte[], byte[], byte[], byte[]...)}.
+	 * @param key Combined key, which is split in half.
+	 * @param ciphertext Your cipehrtext, which shall be decrypted.
+	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
+	 * @return Plaintext byte array.
+	 * @throws IllegalArgumentException       If keys are invalid.
+	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
+	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
+	 */
+	public byte[] decrypt(SecretKey key, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
+		final byte[] keyBytes = key.getEncoded();
+		if (keyBytes.length != 64 && keyBytes.length != 48 && keyBytes.length != 32) {
+			throw new IllegalArgumentException("Key length must be 256, 384, or 512 bits.");
+		}
+		final int subkeyLen = keyBytes.length / 2;
+		assert subkeyLen == 32 || subkeyLen == 24 || subkeyLen == 16;
+		final byte[] macKey = new byte[subkeyLen];
+		final byte[] ctrKey = new byte[subkeyLen];
+		try {
+			System.arraycopy(keyBytes, 0, macKey, 0, macKey.length); // K1 = leftmost(K, len(K)/2);
+			System.arraycopy(keyBytes, macKey.length, ctrKey, 0, ctrKey.length); // K2 = rightmost(K, len(K)/2);
+			return decrypt(ctrKey, macKey, ciphertext, associatedData);
+		} finally {
+			Arrays.fill(macKey, (byte) 0);
+			Arrays.fill(ctrKey, (byte) 0);
+			Arrays.fill(keyBytes, (byte) 0);
+		}
 	}
 
 	/**
