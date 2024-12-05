@@ -108,22 +108,10 @@ public final class SivMode {
 	 * @return IV + Ciphertext as a concatenated byte array.
 	 */
 	public byte[] encrypt(SecretKey key, byte[] plaintext, byte[]... associatedData) {
-		final byte[] keyBytes = key.getEncoded();
-		if (keyBytes.length != 64 && keyBytes.length != 48 && keyBytes.length != 32) {
-			throw new IllegalArgumentException("Key length must be 256, 384, or 512 bits.");
-		}
-		final int subkeyLen = keyBytes.length / 2;
-		assert subkeyLen == 32 || subkeyLen == 24 || subkeyLen == 16;
-		final byte[] macKey = new byte[subkeyLen];
-		final byte[] ctrKey = new byte[subkeyLen];
 		try {
-			System.arraycopy(keyBytes, 0, macKey, 0, macKey.length); // K1 = leftmost(K, len(K)/2);
-			System.arraycopy(keyBytes, macKey.length, ctrKey, 0, ctrKey.length); // K2 = rightmost(K, len(K)/2);
-			return encrypt(ctrKey, macKey, plaintext, associatedData);
-		} finally {
-			Arrays.fill(macKey, (byte) 0);
-			Arrays.fill(ctrKey, (byte) 0);
-			Arrays.fill(keyBytes, (byte) 0);
+			return deriveSubkeysAndThen(this::encrypt, key, plaintext, associatedData);
+		} catch (UnauthenticCiphertextException | IllegalBlockSizeException e) {
+			throw new IllegalStateException("Exceptions only expected during decryption", e);
 		}
 	}
 
@@ -138,16 +126,10 @@ public final class SivMode {
 	 * @throws IllegalArgumentException if keys are invalid or {@link SecretKey#getEncoded()} is not supported.
 	 */
 	public byte[] encrypt(SecretKey ctrKey, SecretKey macKey, byte[] plaintext, byte[]... associatedData) {
-		final byte[] ctrKeyBytes = ctrKey.getEncoded();
-		final byte[] macKeyBytes = macKey.getEncoded();
-		if (ctrKeyBytes == null || macKeyBytes == null) {
-			throw new IllegalArgumentException("Can't get bytes of given key.");
-		}
 		try {
-			return encrypt(ctrKeyBytes, macKeyBytes, plaintext, associatedData);
-		} finally {
-			Arrays.fill(ctrKeyBytes, (byte) 0);
-			Arrays.fill(macKeyBytes, (byte) 0);
+			return getEncodedAndThen(this::encrypt, ctrKey, macKey, plaintext, associatedData);
+		} catch (UnauthenticCiphertextException | IllegalBlockSizeException e) {
+			throw new IllegalStateException("Exceptions only expected during decryption", e);
 		}
 	}
 
@@ -188,23 +170,7 @@ public final class SivMode {
 	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
 	 */
 	public byte[] decrypt(SecretKey key, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
-		final byte[] keyBytes = key.getEncoded();
-		if (keyBytes.length != 64 && keyBytes.length != 48 && keyBytes.length != 32) {
-			throw new IllegalArgumentException("Key length must be 256, 384, or 512 bits.");
-		}
-		final int subkeyLen = keyBytes.length / 2;
-		assert subkeyLen == 32 || subkeyLen == 24 || subkeyLen == 16;
-		final byte[] macKey = new byte[subkeyLen];
-		final byte[] ctrKey = new byte[subkeyLen];
-		try {
-			System.arraycopy(keyBytes, 0, macKey, 0, macKey.length); // K1 = leftmost(K, len(K)/2);
-			System.arraycopy(keyBytes, macKey.length, ctrKey, 0, ctrKey.length); // K2 = rightmost(K, len(K)/2);
-			return decrypt(ctrKey, macKey, ciphertext, associatedData);
-		} finally {
-			Arrays.fill(macKey, (byte) 0);
-			Arrays.fill(ctrKey, (byte) 0);
-			Arrays.fill(keyBytes, (byte) 0);
-		}
+		return deriveSubkeysAndThen(this::decrypt, key, ciphertext, associatedData);
 	}
 
 	/**
@@ -220,17 +186,7 @@ public final class SivMode {
 	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
 	 */
 	public byte[] decrypt(SecretKey ctrKey, SecretKey macKey, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
-		final byte[] ctrKeyBytes = ctrKey.getEncoded();
-		final byte[] macKeyBytes = macKey.getEncoded();
-		if (ctrKeyBytes == null || macKeyBytes == null) {
-			throw new IllegalArgumentException("Can't get bytes of given key.");
-		}
-		try {
-			return decrypt(ctrKeyBytes, macKeyBytes, ciphertext, associatedData);
-		} finally {
-			Arrays.fill(ctrKeyBytes, (byte) 0);
-			Arrays.fill(macKeyBytes, (byte) 0);
-		}
+		return getEncodedAndThen(this::decrypt, ctrKey, macKey, ciphertext, associatedData);
 	}
 
 	/**
@@ -266,6 +222,70 @@ public final class SivMode {
 			return plaintext;
 		} else {
 			throw new UnauthenticCiphertextException("authentication in SIV decryption failed");
+		}
+	}
+
+
+	/**
+	 * Either {@link #encrypt(byte[], byte[], byte[], byte[]...)} or {@link #decrypt(byte[], byte[], byte[], byte[]...)}.
+	 */
+	@FunctionalInterface
+	private interface EncryptOrDecrypt {
+		byte[] compute(byte[] ctrKey, byte[] macKey, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException;
+	}
+
+	/**
+	 * Splits the key into two subkeys and then encrypts or decrypts the data.
+	 * @param encryptOrDecrypt Either {@link #encrypt(byte[], byte[], byte[], byte[]...)} or {@link #decrypt(byte[], byte[], byte[], byte[]...)}
+	 * @param key The combined key, with the leftmost half being the S2V key and the rightmost half being the CTR key
+	 * @param data The to-be-encrypted plaintext or the to-be-decrypted ciphertext
+	 * @param associatedData Optional associated data
+	 * @return result of the encryptOrDecrypt function
+	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted (only during decryption).
+	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length (only during decryption).
+	 */
+	private byte[] deriveSubkeysAndThen(EncryptOrDecrypt encryptOrDecrypt, SecretKey key, byte[] data, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
+		final byte[] keyBytes = key.getEncoded();
+		if (keyBytes.length != 64 && keyBytes.length != 48 && keyBytes.length != 32) {
+			throw new IllegalArgumentException("Key length must be 256, 384, or 512 bits.");
+		}
+		final int subkeyLen = keyBytes.length / 2;
+		assert subkeyLen == 32 || subkeyLen == 24 || subkeyLen == 16;
+		final byte[] macKey = new byte[subkeyLen];
+		final byte[] ctrKey = new byte[subkeyLen];
+		try {
+			System.arraycopy(keyBytes, 0, macKey, 0, macKey.length); // K1 = leftmost(K, len(K)/2);
+			System.arraycopy(keyBytes, macKey.length, ctrKey, 0, ctrKey.length); // K2 = rightmost(K, len(K)/2);
+			return encryptOrDecrypt.compute(ctrKey, macKey, data, associatedData);
+		} finally {
+			Arrays.fill(macKey, (byte) 0);
+			Arrays.fill(ctrKey, (byte) 0);
+			Arrays.fill(keyBytes, (byte) 0);
+		}
+	}
+
+	/**
+	 * Encrypts or decrypts data using the given keys.
+	 * @param encryptOrDecrypt Either {@link #encrypt(byte[], byte[], byte[], byte[]...)} or {@link #decrypt(byte[], byte[], byte[], byte[]...)}
+	 * @param ctrKey The part of the key used for the CTR computation
+	 * @param macKey The part of the key used for the S2V computation
+	 * @param data The to-be-encrypted plaintext or the to-be-decrypted ciphertext
+	 * @param associatedData Optional associated data
+	 * @return result of the encryptOrDecrypt function
+	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted (only during decryption).
+	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length (only during decryption).
+	 */
+	private byte[] getEncodedAndThen(EncryptOrDecrypt encryptOrDecrypt, SecretKey ctrKey, SecretKey macKey, byte[] data, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
+		final byte[] ctrKeyBytes = ctrKey.getEncoded();
+		final byte[] macKeyBytes = macKey.getEncoded();
+		if (ctrKeyBytes == null || macKeyBytes == null) {
+			throw new IllegalArgumentException("Can't get bytes of given key.");
+		}
+		try {
+			return encryptOrDecrypt.compute(ctrKeyBytes, macKeyBytes, data, associatedData);
+		} finally {
+			Arrays.fill(ctrKeyBytes, (byte) 0);
+			Arrays.fill(macKeyBytes, (byte) 0);
 		}
 	}
 
