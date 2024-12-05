@@ -41,11 +41,11 @@
 		<bouncycastle.version>1.78.1</bouncycastle.version>
 
 		<!-- test dependencies -->
-		<junit.version>5.10.2</junit.version>
-		<mockito.version>5.12.0</mockito.version>
+		<junit.version>5.11.0</junit.version>
+		<mockito.version>5.13.0</mockito.version>
 		<jmh.version>1.37</jmh.version>
-		<hamcrest.version>2.2</hamcrest.version>
-		<guava.version>33.2.1-jre</guava.version>
+		<hamcrest.version>3.0</hamcrest.version>
+		<guava.version>33.3.0-jre</guava.version>
 
 		<!-- maven plugins -->
 		<dependency-check.version>10.0.2</dependency-check.version>
