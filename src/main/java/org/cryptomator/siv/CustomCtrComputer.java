@@ -3,6 +3,7 @@ package org.cryptomator.siv;
 import org.bouncycastle.crypto.BlockCipher;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.OutputLengthException;
+import org.bouncycastle.crypto.modes.CTRModeCipher;
 import org.bouncycastle.crypto.modes.SICBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
@@ -22,7 +23,7 @@ class CustomCtrComputer implements SivMode.CtrComputer {
 	
 	@Override
 	public byte[] computeCtr(byte[] input, byte[] key, byte[] iv) {
-		SICBlockCipher cipher = new SICBlockCipher(blockCipherSupplier.get());
+		CTRModeCipher cipher = SICBlockCipher.newInstance(blockCipherSupplier.get());
 		CipherParameters params = new ParametersWithIV(new KeyParameter(key), iv);
 		cipher.init(true, params);
 		try {
