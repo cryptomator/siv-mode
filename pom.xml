@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cryptomator</groupId>
 	<artifactId>siv-mode</artifactId>
-	<version>1.6.0</version>
+	<version>1.6.1</version>
 
 	<name>SIV Mode</name>
 	<description>RFC 5297 SIV mode: deterministic authenticated encryption</description>
@@ -35,20 +35,20 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.outputTimestamp>2024-04-16T12:32:12Z</project.build.outputTimestamp>
+		<project.build.outputTimestamp>2025-03-14T11:57:23Z</project.build.outputTimestamp>
 
 		<!-- dependencies -->
-		<bouncycastle.version>1.78.1</bouncycastle.version>
+		<bouncycastle.version>1.80</bouncycastle.version>
 
 		<!-- test dependencies -->
-		<junit.version>5.11.0</junit.version>
-		<mockito.version>5.13.0</mockito.version>
+		<junit.version>5.12.0</junit.version>
+		<mockito.version>5.15.2</mockito.version>
 		<jmh.version>1.37</jmh.version>
 		<hamcrest.version>3.0</hamcrest.version>
-		<guava.version>33.3.0-jre</guava.version>
+		<guava.version>33.4.0-jre</guava.version>
 
 		<!-- maven plugins -->
-		<dependency-check.version>11.1.1</dependency-check.version>
+		<dependency-check.version>12.1.0</dependency-check.version>
 	</properties>
 
 	<dependencies>
@@ -62,7 +62,7 @@
 		<dependency>
 			<groupId>org.jetbrains</groupId>
 			<artifactId>annotations</artifactId>
-			<version>24.1.0</version>
+			<version>26.0.2</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -136,7 +136,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.13.0</version>
+				<version>3.14.0</version>
 				<configuration>
 					<release>8</release>
 					<encoding>UTF-8</encoding>
@@ -190,7 +190,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.11.1</version>
+				<version>3.11.2</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -263,7 +263,7 @@
 							<skipTestScope>true</skipTestScope>
 							<detail>true</detail>
 							<suppressionFile>suppression.xml</suppressionFile>
-							<nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+							<nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
 						</configuration>
 						<executions>
 							<execution>
@@ -321,7 +321,6 @@
 								</goals>
 								<configuration>
 									<signer>bc</signer>
-									<keyFingerprint>58117AFA1F85B3EEC154677D615D449FE6E6A235</keyFingerprint>
 								</configuration>
 							</execution>
 						</executions>
@@ -332,24 +331,16 @@
 
 		<profile>
 			<id>deploy-central</id>
-			<distributionManagement>
-				<repository>
-					<id>ossrh</id>
-					<name>Maven Central</name>
-					<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-				</repository>
-			</distributionManagement>
 			<build>
 				<plugins>
 					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.7.0</version>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<version>0.7.0</version>
 						<extensions>true</extensions>
 						<configuration>
-							<serverId>ossrh</serverId>
-							<nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+							<publishingServerId>central</publishingServerId>
+ 							<autoPublish>true</autoPublish>
 						</configuration>
 					</plugin>
 				</plugins>
