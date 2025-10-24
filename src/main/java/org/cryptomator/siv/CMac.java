@@ -1,0 +1,186 @@
+package org.cryptomator.siv;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.MacSpi;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
+
+/**
+ * AES-CMAC (Cipher-based Message Authentication Code).
+ * Specs: <a href="https://www.rfc-editor.org/rfc/rfc4493.html">RFC 4493</a>.
+ */
+class CMac extends MacSpi {
+
+	private static final int BLOCK_SIZE = 16; // 128 bits for AES
+	private static final String AES_ALGORITHM = "AES";
+	private static final String AES_ECB_NO_PADDING = "AES/ECB/NoPadding";
+
+	// MAC keys:
+	private Cipher cipher;
+	private byte[] k1;
+	private byte[] k2;
+
+	// MAC state:
+	private int bufferPos = 0;
+	private byte[] buffer = new byte[BLOCK_SIZE];
+	private byte[] x = new byte[BLOCK_SIZE]; // X := const_Zero;
+	private byte[] y = new byte[BLOCK_SIZE];
+	private int msgLen = 0;
+
+	@Override
+	protected int engineGetMacLength() {
+		return BLOCK_SIZE;
+	}
+
+	@Override
+	protected void engineInit(Key key, AlgorithmParameterSpec params) throws InvalidKeyException {
+		try {
+			this.cipher = Cipher.getInstance(AES_ECB_NO_PADDING);
+		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+			throw new AssertionError("Every implementation of the Java platform is required to support [...] AES/ECB/NoPadding", e);
+		}
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+
+		// init subkeys K1 and K2
+		// see https://www.rfc-editor.org/rfc/rfc4493.html#section-2.3
+		byte[] L = new byte[BLOCK_SIZE];
+		try {
+			// L = AES_encrypt(K, const_Zero)
+			L = encryptBlock(cipher, L);
+			this.k1 = SivMode.dbl(L);
+			this.k2 = SivMode.dbl(k1);
+		} finally {
+			Arrays.fill(L, (byte) 0);
+		}
+	}
+
+	@Override
+	protected void engineUpdate(byte input) {
+		if (bufferPos == BLOCK_SIZE) { // buffer is full
+			processBlock();
+		}
+		assert bufferPos < BLOCK_SIZE;
+		buffer[bufferPos++] = input;
+		msgLen++;
+	}
+
+	@Override
+	protected void engineUpdate(byte[] input, int offset, int len) {
+		assert bufferPos < BLOCK_SIZE;
+		for (int i = offset; i < offset + len; ) {
+			if (bufferPos == BLOCK_SIZE) { // buffer is full
+				processBlock();
+			}
+			int required = offset + len - i;
+			int available = BLOCK_SIZE - bufferPos;
+			int m = Math.min(required, available);
+			System.arraycopy(input, i, buffer, bufferPos, m);
+			bufferPos += m;
+			i += m;
+		}
+		msgLen += len;
+	}
+
+	// https://www.rfc-editor.org/rfc/rfc4493.html#section-2.4 Step 6
+	private void processBlock() {
+		y = SivMode.xor(x, buffer); // Y := X XOR M_i;
+		x = encryptBlock(cipher, y); // X := AES-128(K,Y);
+		bufferPos = 0;
+	}
+
+	// https://www.rfc-editor.org/rfc/rfc4493.html#section-2.4
+	@Override
+	protected byte[] engineDoFinal() {
+		// Step 3:
+		boolean flag = msgLen > 0 && bufferPos % BLOCK_SIZE == 0; // denoting if last block is complete or not
+
+		// Step 4:
+		byte[] m_last;
+		if (flag) {
+			// M_last := M_n XOR K1;
+			m_last = SivMode.xor(buffer, k1);
+		} else {
+			// M_last := padding(M_n) XOR K2;
+			//
+			// [...] padding(x) is the concatenation of x and a single '1',
+			// followed by the minimum number of '0's, so that the total length is
+			// equal to 128 bits.
+			buffer[bufferPos] = (byte) 0x80; // single '1' bit
+			if (bufferPos + 1 < BLOCK_SIZE) {
+				Arrays.fill(buffer, bufferPos + 1, BLOCK_SIZE, (byte) 0x00); // followed by '0' bits
+			}
+			m_last = SivMode.xor(buffer, k2);
+		}
+
+		// Step 7:
+		y = SivMode.xor(m_last, x); // Y := M_last XOR X;
+		try {
+			return encryptBlock(cipher, y); // T := AES-128(K,Y);
+		} finally {
+			engineReset();
+		}
+	}
+
+	@Override
+	protected void engineReset() {
+		bufferPos = 0;
+		msgLen = 0;
+		Arrays.fill(buffer, (byte) 0);
+		Arrays.fill(x, (byte) 0);
+		Arrays.fill(y, (byte) 0);
+	}
+
+	// TODO make instance method, remove cipher param?
+	private static byte[] encryptBlock(Cipher cipher, byte[] block) {
+		try {
+			return cipher.doFinal(block);
+		} catch (IllegalBlockSizeException e) {
+			throw new IllegalArgumentException(e);
+		} catch (BadPaddingException e) {
+			throw new AssertionError("Not in decrypt mode", e);
+		}
+	}
+
+	/**
+	 * Create a new CMAC instance for incremental message processing
+	 */
+	public static CMac create(byte[] key) {
+		if (key.length != 16 && key.length != 24 && key.length != 32) {
+			throw new IllegalArgumentException("Invalid key length. Must be 16, 24, or 32 bytes");
+		}
+		try {
+			SecretKeySpec keySpec = new SecretKeySpec(key, AES_ALGORITHM);
+
+			CMac mac = new CMac();
+			mac.engineInit(keySpec, null);
+			return mac;
+		} catch (InvalidKeyException e) {
+			throw new IllegalArgumentException("Invalid key", e);
+		}
+	}
+
+	/**
+	 * One-shot CMAC computation
+	 */
+	public static byte[] tag(byte[] key, byte[] message) {
+		CMac cmac = create(key);
+		cmac.engineUpdate(message, 0, message.length);
+		return cmac.engineDoFinal();
+	}
+
+	/**
+	 * Verify CMAC tag
+	 */
+	public static boolean verify(byte[] key, byte[] message, byte[] tag) {
+		byte[] computedTag = tag(key, message);
+		return MessageDigest.isEqual(computedTag, tag);
+	}
+}

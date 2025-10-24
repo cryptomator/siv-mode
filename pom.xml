@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.cryptomator</groupId>
 	<artifactId>siv-mode</artifactId>
@@ -37,28 +38,21 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.outputTimestamp>2025-03-14T12:02:43Z</project.build.outputTimestamp>
 
-		<!-- dependencies -->
-		<bouncycastle.version>1.80</bouncycastle.version>
-
 		<!-- test dependencies -->
 		<junit.version>5.12.0</junit.version>
-		<mockito.version>5.15.2</mockito.version>
+		<mockito.version>5.20.0</mockito.version>
 		<jmh.version>1.37</jmh.version>
 		<hamcrest.version>3.0</hamcrest.version>
 		<guava.version>33.4.0-jre</guava.version>
 
 		<!-- maven plugins -->
 		<dependency-check.version>12.1.1</dependency-check.version>
+
+		<!-- Property used by surefire to determine jacoco engine -->
+		<surefire.jacoco.args/>
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk18on</artifactId>
-			<version>${bouncycastle.version}</version>
-			<!-- see maven-shade-plugin; we don't want this as a transitive dependency in other projects -->
-			<optional>true</optional>
-		</dependency>
 		<dependency>
 			<groupId>org.jetbrains</groupId>
 			<artifactId>annotations</artifactId>
@@ -135,12 +129,32 @@
 				</executions>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>jar-paths-to-properties</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.14.0</version>
 				<configuration>
 					<release>8</release>
 					<encoding>UTF-8</encoding>
 					<showWarnings>true</showWarnings>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.openjdk.jmh</groupId>
+							<artifactId>jmh-generator-annprocess</artifactId>
+							<version>${jmh.version}</version>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 				<executions>
 					<execution>
@@ -163,6 +177,9 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.5.3</version>
+				<configuration>
+					<argLine>@{surefire.jacoco.args} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -207,43 +224,6 @@
 					</additionalJOptions>
 					<release>8</release>
 				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.6.0</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<minimizeJar>true</minimizeJar>
-							<keepDependenciesWithProvidedScope>false</keepDependenciesWithProvidedScope>
-							<createDependencyReducedPom>false</createDependencyReducedPom>
-							<createSourcesJar>false</createSourcesJar>
-							<artifactSet>
-								<includes>
-									<include>org.bouncycastle:bcprov-jdk18on</include>
-								</includes>
-							</artifactSet>
-							<relocations>
-								<relocation>
-									<pattern>org.bouncycastle</pattern>
-									<shadedPattern>org.cryptomator.siv.org.bouncycastle</shadedPattern>
-								</relocation>
-							</relocations>
-							<filters>
-								<filter>
-									<artifact>org.bouncycastle:bcprov-jdk18on</artifact>
-									<excludes>
-										<exclude>META-INF/**</exclude>
-									</excludes>
-								</filter>
-							</filters>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
 	</build>
@@ -292,6 +272,9 @@
 								<goals>
 									<goal>prepare-agent</goal>
 								</goals>
+								<configuration>
+									<propertyName>surefire.jacoco.args</propertyName>
+								</configuration>
 							</execution>
 						</executions>
 						<!-- workaround for https://github.com/jacoco/jacoco/issues/407 -->
@@ -340,7 +323,7 @@
 						<extensions>true</extensions>
 						<configuration>
 							<publishingServerId>central</publishingServerId>
- 							<autoPublish>true</autoPublish>
+							<autoPublish>true</autoPublish>
 						</configuration>
 					</plugin>
 				</plugins>

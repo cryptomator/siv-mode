@@ -8,11 +8,6 @@ package org.cryptomator.siv;
  *     Sebastian Stenzel - initial API and implementation
  ******************************************************************************/
 
-import org.bouncycastle.crypto.engines.AESLightEngine;
-import org.bouncycastle.crypto.engines.DESEngine;
-import org.cryptomator.siv.SivMode.BlockCipherFactory;
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicTest;
@@ -77,25 +72,6 @@ public class SivModeTest {
 		Assertions.assertThrows(IllegalArgumentException.class, () -> {
 			sivMode.encrypt(key, new byte[10]);
 		});
-	}
-
-	@Test
-	public void testInvalidCipher1() {
-		BlockCipherFactory factory = () -> null;
-
-		Assertions.assertThrows(NullPointerException.class, () -> {
-			new SivMode(factory);
-		});
-	}
-
-	@Test
-	public void testInvalidCipher2() {
-		BlockCipherFactory factory = DESEngine::new; // wrong block size
-
-		IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-			new SivMode(factory);
-		});
-		MatcherAssert.assertThat(e.getMessage(), CoreMatchers.containsString("cipherFactory must create BlockCipher objects with a 16-byte block size"));
 	}
 
 	@Test
@@ -194,9 +170,6 @@ public class SivModeTest {
 
 		final byte[] sunJceResult = new SivMode(getSunJceProvider()).computeCtr(new byte[16], ctrKey, ctr);
 		Assertions.assertArrayEquals(expected, sunJceResult);
-
-		final byte[] bcResult = new SivMode(AESLightEngine::new).computeCtr(new byte[16], ctrKey, ctr);
-		Assertions.assertArrayEquals(expected, bcResult);
 	}
 
 	// CTR-AES https://tools.ietf.org/html/rfc5297#appendix-A.2
