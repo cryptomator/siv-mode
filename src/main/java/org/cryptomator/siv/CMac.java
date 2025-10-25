@@ -9,7 +9,6 @@ import javax.crypto.ShortBufferException;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
@@ -21,7 +20,7 @@ import static org.cryptomator.siv.Utils.xor;
  * AES-CMAC (Cipher-based Message Authentication Code).
  * Specs: <a href="https://www.rfc-editor.org/rfc/rfc4493.html">RFC 4493</a>.
  */
-class CMac extends MacSpi {
+public class CMac extends MacSpi {
 
 	private static final int BLOCK_SIZE = 16; // 128 bits for AES
 	private static final String AES_ALGORITHM = "AES";

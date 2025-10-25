@@ -3,6 +3,7 @@ package org.cryptomator.siv;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -27,7 +28,7 @@ public final class SivMode {
 	private final SecretKey macKey;
 	private final SecretKey ctrKey;
 
-	private final CMac cmac;
+	private final Mac cmac;
 	private final Cipher ctrCipher;
 
 	/**
@@ -47,11 +48,14 @@ public final class SivMode {
 		System.arraycopy(key, macKey.length, ctrKey, 0, ctrKey.length); // K2 = rightmost(K, len(K)/2);
 		this.macKey = new SecretKeySpec(macKey, "AES");
 		this.ctrKey = new SecretKeySpec(ctrKey, "AES");
-		this.cmac = new CMac();
+
 		try {
-			cmac.engineInit(this.macKey, null);
+			this.cmac = Mac.getInstance("CMAC", SivProvider.INSTANCE);
+			cmac.init(this.macKey);
 		} catch (InvalidKeyException e) {
 			throw new IllegalArgumentException(e);
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException("Failed to find CMAC in SivProvider.", e);
 		}
 
 		try {
@@ -166,9 +170,8 @@ public final class SivMode {
 		return mac(cmac, t);
 	}
 
-	private static byte[] mac(CMac mac, byte[] in) {
-		mac.engineUpdate(in, 0, in.length);
-		return mac.engineDoFinal();
+	private static byte[] mac(Mac mac, byte[] in) {
+		return mac.doFinal(in);
 	}
 
 }

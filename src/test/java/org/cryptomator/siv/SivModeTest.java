@@ -292,13 +292,6 @@ public class SivModeTest {
 
 	}
 
-	@Nested
-	public class HelperMethods {
-
-
-
-	}
-
 	@TestFactory
 	public Stream<DynamicContainer> testGeneratedTestCases() {
 		InputStream in = EncryptionTestCase.class.getResourceAsStream("/testcases.txt");
