@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Needs to be compiled via maven as the JMH annotation processor needs to do stuff...
  */
-@SuppressWarnings("deprecation")
 @State(Scope.Thread)
 @Warmup(iterations = 3, time = 300, timeUnit = TimeUnit.MILLISECONDS)
 @Measurement(iterations = 2, time = 500, timeUnit = TimeUnit.MILLISECONDS)

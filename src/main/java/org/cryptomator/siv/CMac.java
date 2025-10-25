@@ -5,6 +5,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.MacSpi;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.ShortBufferException;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -23,14 +24,22 @@ class CMac extends MacSpi {
 	private static final String AES_ALGORITHM = "AES";
 	private static final String AES_ECB_NO_PADDING = "AES/ECB/NoPadding";
 
+	private static final ThreadLocal<Cipher> AES = ThreadLocals.withInitial(() -> {
+		try {
+			return Cipher.getInstance(AES_ECB_NO_PADDING);
+		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+			throw new AssertionError("Every implementation of the Java platform is required to support [...] AES/ECB/NoPadding", e);
+		}
+	});
+
 	// MAC keys:
 	private Cipher cipher;
 	private byte[] k1;
 	private byte[] k2;
 
 	// MAC state:
+	private final byte[] buffer = new byte[BLOCK_SIZE];
 	private int bufferPos = 0;
-	private byte[] buffer = new byte[BLOCK_SIZE];
 	private byte[] x = new byte[BLOCK_SIZE]; // X := const_Zero;
 	private byte[] y = new byte[BLOCK_SIZE];
 	private int msgLen = 0;
@@ -42,11 +51,12 @@ class CMac extends MacSpi {
 
 	@Override
 	protected void engineInit(Key key, AlgorithmParameterSpec params) throws InvalidKeyException {
-		try {
-			this.cipher = Cipher.getInstance(AES_ECB_NO_PADDING);
-		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-			throw new AssertionError("Every implementation of the Java platform is required to support [...] AES/ECB/NoPadding", e);
-		}
+		this.cipher = AES.get();
+//		try {
+//			this.cipher = Cipher.getInstance(AES_ECB_NO_PADDING);
+//		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+//			throw new AssertionError("Every implementation of the Java platform is required to support [...] AES/ECB/NoPadding", e);
+//		}
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 
 		// init subkeys K1 and K2
@@ -54,7 +64,7 @@ class CMac extends MacSpi {
 		byte[] L = new byte[BLOCK_SIZE];
 		try {
 			// L = AES_encrypt(K, const_Zero)
-			L = encryptBlock(cipher, L);
+			encryptBlock(cipher, L, L);
 			this.k1 = SivMode.dbl(L);
 			this.k2 = SivMode.dbl(k1);
 		} finally {
@@ -91,8 +101,8 @@ class CMac extends MacSpi {
 
 	// https://www.rfc-editor.org/rfc/rfc4493.html#section-2.4 Step 6
 	private void processBlock() {
-		y = SivMode.xor(x, buffer); // Y := X XOR M_i;
-		x = encryptBlock(cipher, y); // X := AES-128(K,Y);
+		SivMode.xor(x, buffer, y); // Y := X XOR M_i;
+		encryptBlock(cipher, y, x); // X := AES-128(K,Y);
 		bufferPos = 0;
 	}
 
@@ -121,9 +131,11 @@ class CMac extends MacSpi {
 		}
 
 		// Step 7:
-		y = SivMode.xor(m_last, x); // Y := M_last XOR X;
+		SivMode.xor(m_last, x, y); // Y := M_last XOR X;
 		try {
-			return encryptBlock(cipher, y); // T := AES-128(K,Y);
+			byte[] t = new byte[BLOCK_SIZE];
+			encryptBlock(cipher, y, t); // T := AES-128(K,Y);
+			return t;
 		} finally {
 			engineReset();
 		}
@@ -139,13 +151,15 @@ class CMac extends MacSpi {
 	}
 
 	// TODO make instance method, remove cipher param?
-	private static byte[] encryptBlock(Cipher cipher, byte[] block) {
+	private static void encryptBlock(Cipher cipher, byte[] block, byte[] output) {
 		try {
-			return cipher.doFinal(block);
+			cipher.doFinal(block, 0, BLOCK_SIZE, output);
 		} catch (IllegalBlockSizeException e) {
 			throw new IllegalArgumentException(e);
 		} catch (BadPaddingException e) {
 			throw new AssertionError("Not in decrypt mode", e);
+		} catch (ShortBufferException e) {
+			throw new IllegalArgumentException("Output buffer too short", e);
 		}
 	}
 

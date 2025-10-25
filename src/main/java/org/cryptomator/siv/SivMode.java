@@ -318,10 +318,15 @@ public final class SivMode {
 	static byte[] xor(byte[] in1, byte[] in2) {
 		assert in1.length <= in2.length : "Length of first input must be <= length of second input.";
 		final byte[] result = new byte[in1.length];
+		xor(in1, in2, result);
+		return result;
+	}
+
+	static void xor(byte[] in1, byte[] in2, byte[] result) {
+		assert result.length <= in1.length && result.length <= in2.length : "All inputs must have the same length.";
 		for (int i = 0; i < result.length; i++) {
 			result[i] = (byte) (in1[i] ^ in2[i]);
 		}
-		return result;
 	}
 
 	@VisibleForTesting
