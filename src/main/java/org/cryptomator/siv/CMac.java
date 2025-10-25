@@ -14,6 +14,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 
+import static org.cryptomator.siv.Utils.dbl;
+import static org.cryptomator.siv.Utils.xor;
+
 /**
  * AES-CMAC (Cipher-based Message Authentication Code).
  * Specs: <a href="https://www.rfc-editor.org/rfc/rfc4493.html">RFC 4493</a>.
@@ -56,8 +59,8 @@ class CMac extends MacSpi {
 		try {
 			// L = AES_encrypt(K, const_Zero)
 			encryptBlock(cipher, L, L);
-			this.k1 = SivMode.dbl(L);
-			this.k2 = SivMode.dbl(k1);
+			this.k1 = dbl(L);
+			this.k2 = dbl(k1);
 		} finally {
 			Arrays.fill(L, (byte) 0);
 		}
@@ -92,7 +95,7 @@ class CMac extends MacSpi {
 
 	// https://www.rfc-editor.org/rfc/rfc4493.html#section-2.4 Step 6
 	private void processBlock() {
-		SivMode.xor(x, buffer, y); // Y := X XOR M_i;
+		xor(x, buffer, y); // Y := X XOR M_i;
 		encryptBlock(cipher, y, x); // X := AES-128(K,Y);
 		bufferPos = 0;
 	}
@@ -107,7 +110,7 @@ class CMac extends MacSpi {
 		byte[] m_last;
 		if (flag) {
 			// M_last := M_n XOR K1;
-			m_last = SivMode.xor(buffer, k1);
+			m_last = xor(buffer, k1);
 		} else {
 			// M_last := padding(M_n) XOR K2;
 			//
@@ -118,11 +121,11 @@ class CMac extends MacSpi {
 			if (bufferPos + 1 < BLOCK_SIZE) {
 				Arrays.fill(buffer, bufferPos + 1, BLOCK_SIZE, (byte) 0x00); // followed by '0' bits
 			}
-			m_last = SivMode.xor(buffer, k2);
+			m_last = xor(buffer, k2);
 		}
 
 		// Step 7:
-		SivMode.xor(m_last, x, y); // Y := M_last XOR X;
+		xor(m_last, x, y); // Y := M_last XOR X;
 		try {
 			byte[] t = new byte[BLOCK_SIZE];
 			encryptBlock(cipher, y, t); // T := AES-128(K,Y);
@@ -178,13 +181,5 @@ class CMac extends MacSpi {
 		CMac cmac = create(key);
 		cmac.engineUpdate(message, 0, message.length);
 		return cmac.engineDoFinal();
-	}
-
-	/**
-	 * Verify CMAC tag
-	 */
-	public static boolean verify(byte[] key, byte[] message, byte[] tag) {
-		byte[] computedTag = tag(key, message);
-		return MessageDigest.isEqual(computedTag, tag);
 	}
 }

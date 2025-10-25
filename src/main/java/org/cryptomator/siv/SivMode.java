@@ -1,7 +1,5 @@
 package org.cryptomator.siv;
 
-import org.jetbrains.annotations.VisibleForTesting;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -14,13 +12,17 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
+import static org.cryptomator.siv.Utils.dbl;
+import static org.cryptomator.siv.Utils.pad;
+import static org.cryptomator.siv.Utils.xor;
+import static org.cryptomator.siv.Utils.xorend;
+
 /**
  * Implements the RFC 5297 SIV mode.
  */
 public final class SivMode {
 
 	private static final byte[] BYTES_ZERO = new byte[16];
-	private static final byte DOUBLING_CONST = (byte) 0x87;
 
 	private final SecretKey macKey;
 	private final SecretKey ctrKey;
@@ -65,7 +67,7 @@ public final class SivMode {
 	 * @param plaintext      Your plaintext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
-	 * @throws IllegalArgumentException if either of the two keys is of invalid length.
+	 * @throws IllegalArgumentException if either param exceeds the limits for safe use.
 	 */
 	public byte[] encrypt(byte[] plaintext, byte[]... associatedData) {
 		// Check if plaintext length will cause overflows
@@ -89,7 +91,6 @@ public final class SivMode {
 	 * @param ciphertext     Your ciphertext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
-	 * @throws IllegalArgumentException       If the either of the two keys is of invalid length.
 	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
 	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
 	 */
@@ -117,7 +118,7 @@ public final class SivMode {
 		}
 	}
 
-	@VisibleForTesting
+	// visible for testing
 	byte[] computeCtr(byte[] input, final byte[] iv) {
 		// clear out the 31st and 63rd (rightmost) bit:
 		final byte[] adjustedIv = Arrays.copyOf(iv, 16);
@@ -136,7 +137,7 @@ public final class SivMode {
 		}
 	}
 
-	@VisibleForTesting
+	// visible for testing
 	byte[] s2v(byte[] plaintext, byte[]... associatedData) throws IllegalArgumentException {
 		// Maximum permitted AD length is the block size in bits - 2
 		if (associatedData.length > 126) {
@@ -168,68 +169,6 @@ public final class SivMode {
 	private static byte[] mac(CMac mac, byte[] in) {
 		mac.engineUpdate(in, 0, in.length);
 		return mac.engineDoFinal();
-	}
-
-	// First bit 1, following bits 0.
-	private static byte[] pad(byte[] in) {
-		final byte[] result = Arrays.copyOf(in, 16);
-		result[in.length] = (byte) 0x80;
-		return result;
-	}
-
-	// Code taken from {@link org.bouncycastle.crypto.macs.CMac}
-	@VisibleForTesting
-	static int shiftLeft(byte[] block, byte[] output) {
-		int i = block.length;
-		int bit = 0;
-		while (--i >= 0) {
-			int b = block[i] & 0xff;
-			output[i] = (byte) ((b << 1) | bit);
-			bit = (b >>> 7) & 1;
-		}
-		return bit;
-	}
-
-	// Code taken from {@link org.bouncycastle.crypto.macs.CMac}
-	@VisibleForTesting
-	static byte[] dbl(byte[] in) {
-		byte[] ret = new byte[in.length];
-		int carry = shiftLeft(in, ret);
-		int xor = 0xff & DOUBLING_CONST;
-
-		/*
-		 * NOTE: This construction is an attempt at a constant-time implementation.
-		 */
-		int mask = (-carry) & 0xff;
-		ret[in.length - 1] ^= xor & mask;
-
-		return ret;
-	}
-
-	@VisibleForTesting
-	static byte[] xor(byte[] in1, byte[] in2) {
-		assert in1.length <= in2.length : "Length of first input must be <= length of second input.";
-		final byte[] result = new byte[in1.length];
-		xor(in1, in2, result);
-		return result;
-	}
-
-	static void xor(byte[] in1, byte[] in2, byte[] result) {
-		assert result.length <= in1.length && result.length <= in2.length : "All inputs must have the same length.";
-		for (int i = 0; i < result.length; i++) {
-			result[i] = (byte) (in1[i] ^ in2[i]);
-		}
-	}
-
-	@VisibleForTesting
-	static byte[] xorend(byte[] in1, byte[] in2) {
-		assert in1.length >= in2.length : "Length of first input must be >= length of second input.";
-		final byte[] result = Arrays.copyOf(in1, in1.length);
-		final int diff = in1.length - in2.length;
-		for (int i = 0; i < in2.length; i++) {
-			result[i + diff] = (byte) (result[i + diff] ^ in2[i]);
-		}
-		return result;
 	}
 
 }
