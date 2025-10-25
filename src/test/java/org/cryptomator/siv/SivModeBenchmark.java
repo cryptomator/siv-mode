@@ -28,26 +28,25 @@ import java.util.concurrent.TimeUnit;
 public class SivModeBenchmark {
 
 	private int run;
-	private final byte[] encKey = new byte[16];
-	private final byte[] macKey = new byte[16];
+	private final byte[] key = new byte[32];
 	private final byte[] cleartextData = new byte[1000];
 	private final byte[] associatedData = new byte[100];
 
-	private final SivMode jceSivMode = new SivMode();
+	private SivMode siv;
 
 	@Setup(Level.Trial)
 	public void shuffleData() {
 		run++;
-		Arrays.fill(encKey, (byte) (run & 0xFF));
-		Arrays.fill(macKey, (byte) (run & 0xFF));
+		Arrays.fill(key, (byte) (run & 0xFF));
+		siv = new SivMode(key);
 		Arrays.fill(cleartextData, (byte) (run & 0xFF));
 		Arrays.fill(associatedData, (byte) (run & 0xFF));
 	}
 
 	@Benchmark
 	public void benchmarkJce(Blackhole bh) throws UnauthenticCiphertextException, IllegalBlockSizeException {
-		byte[] encrypted = jceSivMode.encrypt(encKey, macKey, cleartextData, associatedData);
-		byte[] decrypted = jceSivMode.decrypt(encKey, macKey, encrypted, associatedData);
+		byte[] encrypted = siv.encrypt(cleartextData, associatedData);
+		byte[] decrypted = siv.decrypt(encrypted, associatedData);
 		Assertions.assertArrayEquals(cleartextData, decrypted);
 		bh.consume(encrypted);
 		bh.consume(decrypted);

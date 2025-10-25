@@ -24,14 +24,6 @@ class CMac extends MacSpi {
 	private static final String AES_ALGORITHM = "AES";
 	private static final String AES_ECB_NO_PADDING = "AES/ECB/NoPadding";
 
-	private static final ThreadLocal<Cipher> AES = ThreadLocals.withInitial(() -> {
-		try {
-			return Cipher.getInstance(AES_ECB_NO_PADDING);
-		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-			throw new AssertionError("Every implementation of the Java platform is required to support [...] AES/ECB/NoPadding", e);
-		}
-	});
-
 	// MAC keys:
 	private Cipher cipher;
 	private byte[] k1;
@@ -40,8 +32,8 @@ class CMac extends MacSpi {
 	// MAC state:
 	private final byte[] buffer = new byte[BLOCK_SIZE];
 	private int bufferPos = 0;
-	private byte[] x = new byte[BLOCK_SIZE]; // X := const_Zero;
-	private byte[] y = new byte[BLOCK_SIZE];
+	private final byte[] x = new byte[BLOCK_SIZE]; // X := const_Zero;
+	private final byte[] y = new byte[BLOCK_SIZE];
 	private int msgLen = 0;
 
 	@Override
@@ -51,12 +43,11 @@ class CMac extends MacSpi {
 
 	@Override
 	protected void engineInit(Key key, AlgorithmParameterSpec params) throws InvalidKeyException {
-		this.cipher = AES.get();
-//		try {
-//			this.cipher = Cipher.getInstance(AES_ECB_NO_PADDING);
-//		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-//			throw new AssertionError("Every implementation of the Java platform is required to support [...] AES/ECB/NoPadding", e);
-//		}
+		try {
+			this.cipher = Cipher.getInstance(AES_ECB_NO_PADDING);
+		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+			throw new AssertionError("Every implementation of the Java platform is required to support [...] AES/ECB/NoPadding", e);
+		}
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 
 		// init subkeys K1 and K2
@@ -150,7 +141,6 @@ class CMac extends MacSpi {
 		Arrays.fill(y, (byte) 0);
 	}
 
-	// TODO make instance method, remove cipher param?
 	private static void encryptBlock(Cipher cipher, byte[] block, byte[] output) {
 		try {
 			cipher.doFinal(block, 0, BLOCK_SIZE, output);
