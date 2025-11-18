@@ -13,55 +13,47 @@ public class Utils {
 		return result;
 	}
 
-	// Code taken from {@link org.bouncycastle.crypto.macs.CMac}
 	static int shiftLeft(byte[] block, byte[] output) {
-		int i = block.length;
-		int bit = 0;
-		while (--i >= 0) {
-			int b = block[i] & 0xff;
-			output[i] = (byte) ((b << 1) | bit);
-			bit = (b >>> 7) & 1;
+		int carry = 0;
+
+		// Left shift by 1 bit
+		for (int i = block.length - 1; i >= 0; i--) {
+			byte b = (byte) (block[i] & 0xff);
+			output[i] = (byte) ((b << 1) | carry);
+			carry = (b & 0x80) >>> 7;
 		}
-		return bit;
+
+		return carry;
 	}
 
-	// Code taken from {@link org.bouncycastle.crypto.macs.CMac}
-	static byte[] dbl(byte[] in) {
-		byte[] ret = new byte[in.length];
-		int carry = shiftLeft(in, ret);
+	static byte[] dbl(byte[] data) {
+		int carry = shiftLeft(data, data);
 		int xor = 0xff & DOUBLING_CONST;
 
 		/*
 		 * NOTE: This construction is an attempt at a constant-time implementation.
 		 */
 		int mask = (-carry) & 0xff;
-		ret[in.length - 1] ^= xor & mask;
+		data[data.length - 1] ^= xor & mask;
 
-		return ret;
+		return data;
 	}
 
 	static byte[] xor(byte[] in1, byte[] in2) {
 		assert in1.length <= in2.length : "Length of first input must be <= length of second input.";
-		final byte[] result = new byte[in1.length];
-		xor(in1, in2, result);
-		return result;
-	}
-
-	static void xor(byte[] in1, byte[] in2, byte[] result) {
-		assert result.length <= in1.length && result.length <= in2.length : "All inputs must have the same length.";
-		for (int i = 0; i < result.length; i++) {
-			result[i] = (byte) (in1[i] ^ in2[i]);
+		for (int i = 0; i < in1.length; i++) {
+			in1[i] = (byte) (in1[i] ^ in2[i]);
 		}
+		return in1;
 	}
 
 	static byte[] xorend(byte[] in1, byte[] in2) {
 		assert in1.length >= in2.length : "Length of first input must be >= length of second input.";
-		final byte[] result = Arrays.copyOf(in1, in1.length);
 		final int diff = in1.length - in2.length;
 		for (int i = 0; i < in2.length; i++) {
-			result[i + diff] = (byte) (result[i + diff] ^ in2[i]);
+			in1[i + diff] = (byte) (in1[i + diff] ^ in2[i]);
 		}
-		return result;
+		return in1;
 	}
 
 }

@@ -34,8 +34,7 @@ public class CMac extends MacSpi {
 	// MAC state:
 	private final byte[] buffer = new byte[BLOCK_SIZE];
 	private int bufferPos = 0;
-	private final byte[] x = new byte[BLOCK_SIZE]; // X := const_Zero;
-	private final byte[] y = new byte[BLOCK_SIZE];
+	private final byte[] xy = new byte[BLOCK_SIZE]; // X := const_Zero;
 	private int msgLen = 0;
 
 	@Override
@@ -58,8 +57,8 @@ public class CMac extends MacSpi {
 		try {
 			// L = AES_encrypt(K, const_Zero)
 			encryptBlock(cipher, L, L);
-			this.k1 = dbl(L);
-			this.k2 = dbl(k1);
+			this.k1 = dbl(L).clone();
+			this.k2 = dbl(L).clone();
 		} finally {
 			Arrays.fill(L, (byte) 0);
 		}
@@ -94,8 +93,8 @@ public class CMac extends MacSpi {
 
 	// https://www.rfc-editor.org/rfc/rfc4493.html#section-2.4 Step 6
 	private void processBlock() {
-		xor(x, buffer, y); // Y := X XOR M_i;
-		encryptBlock(cipher, y, x); // X := AES-128(K,Y);
+		xor(xy, buffer); // Y := X XOR M_i;
+		encryptBlock(cipher, xy, xy); // X := AES-128(K,Y);
 		bufferPos = 0;
 	}
 
@@ -124,10 +123,10 @@ public class CMac extends MacSpi {
 		}
 
 		// Step 7:
-		xor(m_last, x, y); // Y := M_last XOR X;
+		xor(xy, m_last); // Y := M_last XOR X;
 		try {
 			byte[] t = new byte[BLOCK_SIZE];
-			encryptBlock(cipher, y, t); // T := AES-128(K,Y);
+			encryptBlock(cipher, xy, t); // T := AES-128(K,Y);
 			return t;
 		} finally {
 			engineReset();
@@ -139,8 +138,7 @@ public class CMac extends MacSpi {
 		bufferPos = 0;
 		msgLen = 0;
 		Arrays.fill(buffer, (byte) 0);
-		Arrays.fill(x, (byte) 0);
-		Arrays.fill(y, (byte) 0);
+		Arrays.fill(xy, (byte) 0);
 	}
 
 	private static void encryptBlock(Cipher cipher, byte[] block, byte[] output) {

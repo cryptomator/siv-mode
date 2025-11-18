@@ -187,7 +187,7 @@ public final class SivEngine {
 
 		final byte[] t;
 		if (plaintext.length >= 16) {
-			t = xorend(plaintext, d);
+			t = xorend(Arrays.copyOf(plaintext, plaintext.length), d);
 		} else {
 			t = xor(dbl(d), pad(plaintext));
 		}
