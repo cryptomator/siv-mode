@@ -76,7 +76,7 @@ public final class SivEngine {
 	 * @throws IllegalArgumentException if either param exceeds the limits for safe use.
 	 */
 	public byte[] encrypt(byte[] plaintext, byte[]... associatedData) {
-		final byte[] ciphertext = new byte[16 + plaintext.length];
+		final byte[] ciphertext = new byte[IV_LENGTH + plaintext.length];
 		try {
 			int encrypted = encrypt(plaintext, ciphertext, 0, associatedData);
 			assert encrypted == ciphertext.length;
@@ -86,19 +86,19 @@ public final class SivEngine {
 		return ciphertext;
 	}
 
-	public int encrypt(byte[] input, byte[] output, int outputOffset, byte[]... associatedData) throws ShortBufferException {
+	public int encrypt(byte[] plaintext, byte[] output, int outputOffset, byte[]... associatedData) throws ShortBufferException {
 		// Check if plaintext length will cause overflows
-		if (input.length > (Integer.MAX_VALUE - IV_LENGTH)) {
+		if (plaintext.length > (Integer.MAX_VALUE - IV_LENGTH)) {
 			throw new IllegalArgumentException("Plaintext is too long");
 		}
 
-		if (output.length - outputOffset < IV_LENGTH + input.length) {
+		if (output.length - outputOffset < IV_LENGTH + plaintext.length) {
 			throw new ShortBufferException();
 		}
-		byte[] iv = s2v(input, associatedData);
+		byte[] iv = s2v(plaintext, associatedData);
 		assert iv.length == IV_LENGTH;
 		System.arraycopy(iv, 0, output, 0, IV_LENGTH);
-		return IV_LENGTH + computeCtr(input, iv, output, IV_LENGTH);
+		return IV_LENGTH + computeCtr(plaintext, 0, plaintext.length, iv, 0, IV_LENGTH, output, IV_LENGTH);
 	}
 
 	/**
@@ -115,16 +115,20 @@ public final class SivEngine {
 			throw new IllegalBlockSizeException("Input length must be greater than or equal 16.");
 		}
 
-		final byte[] iv = Arrays.copyOf(ciphertext, IV_LENGTH);
-		final byte[] actualCiphertext = Arrays.copyOfRange(ciphertext, IV_LENGTH, ciphertext.length);
-		final byte[] plaintext = computeCtr(actualCiphertext, iv);
+		final byte[] plaintext = new byte[ciphertext.length - IV_LENGTH];
+		try {
+			int decrypted = computeCtr(ciphertext, IV_LENGTH, ciphertext.length - IV_LENGTH, ciphertext, 0, IV_LENGTH, plaintext, 0);
+			assert decrypted == plaintext.length;
+		} catch (ShortBufferException e) {
+			throw new IllegalStateException(e);
+		}
 		final byte[] control = s2v(plaintext, associatedData);
 
 		// time-constant comparison (taken from MessageDigest.isEqual in JDK8)
-		assert iv.length == control.length;
+		assert control.length == IV_LENGTH;
 		int diff = 0;
-		for (int i = 0; i < iv.length; i++) {
-			diff |= iv[i] ^ control[i];
+		for (int i = 0; i < IV_LENGTH; i++) {
+			diff |= ciphertext[i] ^ control[i];
 		}
 
 		if (diff == 0) {
@@ -139,7 +143,7 @@ public final class SivEngine {
 	byte[] computeCtr(byte[] input, final byte[] iv) {
 		byte[] output = new byte[input.length];
 		try {
-			int processed = computeCtr(input, iv, output, 0);
+			int processed = computeCtr(input, 0, input.length, iv, 0, iv.length, output, 0);
 			assert processed == output.length;
 		} catch (ShortBufferException e) {
 			throw new IllegalStateException(e);
@@ -147,16 +151,16 @@ public final class SivEngine {
 		return output;
 	}
 
-	// visible for testing
-	int computeCtr(byte[] input, final byte[] iv, byte[] output, int outputOffset) throws ShortBufferException {
+	private int computeCtr(byte[] input, int inOff, int inLen, final byte[] iv, int ivOff, int ivLen, byte[] output, int outputOffset) throws ShortBufferException {
 		// clear out the 31st and 63rd (rightmost) bit:
-		final byte[] adjustedIv = Arrays.copyOf(iv, 16);
+		assert ivLen == IV_LENGTH;
+		final byte[] adjustedIv = Arrays.copyOfRange(iv, ivOff, ivOff + ivLen);
 		adjustedIv[8] = (byte) (adjustedIv[8] & 0x7F);
 		adjustedIv[12] = (byte) (adjustedIv[12] & 0x7F);
 
 		try {
 			ctrCipher.init(Cipher.ENCRYPT_MODE, ctrKey, new IvParameterSpec(adjustedIv));
-			return ctrCipher.doFinal(input, 0, input.length, output, outputOffset);
+			return ctrCipher.doFinal(input, inOff, inLen, output, outputOffset);
 		} catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
 			throw new IllegalArgumentException("Key or IV invalid.");
 		} catch (BadPaddingException e) {

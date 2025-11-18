@@ -140,6 +140,7 @@ public class SivCipher extends CipherSpi {
 		if (this.opmode == Cipher.ENCRYPT_MODE || this.opmode == Cipher.WRAP_MODE) {
 			return siv.encrypt(inputBuffer, output, outputOffset, aad);
 		} else if (this.opmode == Cipher.DECRYPT_MODE || this.opmode == Cipher.UNWRAP_MODE) {
+			// for security reasons we can't write into output directly before checking integrity:
 			byte[] plaintext = siv.decrypt(inputBuffer, aad);
 			System.arraycopy(plaintext, 0, output, outputOffset, plaintext.length);
 			return plaintext.length;
