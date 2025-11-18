@@ -130,6 +130,7 @@ public final class SivEngine {
 		if (diff == 0) {
 			return plaintext;
 		} else {
+			Arrays.fill(plaintext, (byte) 0x00);
 			throw new AEADBadTagException("authentication in SIV decryption failed");
 		}
 	}
