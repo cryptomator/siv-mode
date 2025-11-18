@@ -77,11 +77,11 @@ public class CMac extends MacSpi {
 
 	@Override
 	protected void engineUpdate(byte[] input, int offset, int len) {
-		assert bufferPos < BLOCK_SIZE;
 		for (int i = offset; i < offset + len; ) {
 			if (bufferPos == BLOCK_SIZE) { // buffer is full
 				processBlock();
 			}
+			assert bufferPos < BLOCK_SIZE;
 			int required = offset + len - i;
 			int available = BLOCK_SIZE - bufferPos;
 			int m = Math.min(required, available);
