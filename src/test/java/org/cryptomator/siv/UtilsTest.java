@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import static org.cryptomator.siv.Utils.dbl;
 import static org.cryptomator.siv.Utils.shiftLeft;
 import static org.cryptomator.siv.Utils.xor;
-import static org.cryptomator.siv.Utils.xorend;
 
 class UtilsTest {
 
@@ -61,18 +60,6 @@ class UtilsTest {
 		Assertions.assertArrayEquals(new byte[]{(byte) 0x01, (byte) 0x02, (byte) 0x03}, xor(new byte[]{(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[]{(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
 		Assertions.assertArrayEquals(new byte[]{(byte) 0x01, (byte) 0x02, (byte) 0x03}, xor(new byte[]{(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[]{(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
 		Assertions.assertArrayEquals(new byte[]{(byte) 0xAB, (byte) 0x87, (byte) 0x34}, xor(new byte[]{(byte) 0xB9, (byte) 0xB3, (byte) 0x62}, new byte[]{(byte) 0x12, (byte) 0x34, (byte) 0x56, (byte) 0x78}));
-	}
-
-	@Test
-	public void testXorend() {
-		Assertions.assertArrayEquals(new byte[]{}, xorend(new byte[0], new byte[0]));
-		Assertions.assertArrayEquals(new byte[3], xorend(new byte[3], new byte[3]));
-		Assertions.assertArrayEquals(new byte[]{(byte) 0x01, (byte) 0x02, (byte) 0x03}, xorend(new byte[]{(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[]{(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
-		Assertions.assertArrayEquals(new byte[]{(byte) 0x01, (byte) 0x02, (byte) 0x03}, xorend(new byte[]{(byte) 0xFF, (byte) 0x55, (byte) 0x81}, new byte[]{(byte) 0xFE, (byte) 0x57, (byte) 0x82}));
-		Assertions.assertArrayEquals(new byte[]{(byte) 0xB8, (byte) 0xA9, (byte) 0xAB, (byte) 0x87, (byte) 0x34},
-				xorend(new byte[]{(byte) 0xB8, (byte) 0xA9, (byte) 0xB9, (byte) 0xB3, (byte) 0x62}, new byte[]{(byte) 0x12, (byte) 0x34, (byte) 0x56}));
-		Assertions.assertArrayEquals(new byte[]{(byte) 0x23, (byte) 0x80, (byte) 0x32, (byte) 0xEF, (byte) 0xDE, (byte) 0xCD, (byte) 0xAB, (byte) 0x87, (byte) 0x34},
-				xorend(new byte[]{(byte) 0x23, (byte) 0x80, (byte) 0x32, (byte) 0xEF, (byte) 0xDE, (byte) 0xCD, (byte) 0xB9, (byte) 0xB3, (byte) 0x62,}, new byte[]{(byte) 0x12, (byte) 0x34, (byte) 0x56}));
 	}
 
 }

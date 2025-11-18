@@ -18,7 +18,6 @@ import java.util.Arrays;
 import static org.cryptomator.siv.Utils.dbl;
 import static org.cryptomator.siv.Utils.pad;
 import static org.cryptomator.siv.Utils.xor;
-import static org.cryptomator.siv.Utils.xorend;
 
 /**
  * Implements the RFC 5297 SIV mode.
@@ -178,25 +177,22 @@ public final class SivEngine {
 		// S1 = associatedData1, S2 = associatedData2, ... Sn = plaintext
 		// Since this method is invoked only by encrypt/decrypt, we always have a plaintext.
 		// Thus n > 0
-		assert associatedData.length > 0;
 
-		byte[] d = mac(cmac, BYTES_ZERO);
+		byte[] d = cmac.doFinal(BYTES_ZERO);
 
 		for (byte[] s : associatedData) {
-			xor(dbl(d), mac(cmac, s), d);
+			xor(dbl(d), cmac.doFinal(s), d);
 		}
 
-		final byte[] t;
 		if (plaintext.length >= 16) {
-			t = xorend(Arrays.copyOf(plaintext, plaintext.length), d);
+			// T = Sn xorend D
+			cmac.update(plaintext, 0, plaintext.length - 16);
+			byte[] end = xor(d, Arrays.copyOfRange(plaintext, plaintext.length - 16, plaintext.length));
+			return cmac.doFinal(end);
 		} else {
-			t = xor(dbl(d), pad(plaintext));
+			// T = dbl(D) xor pad(Sn)
+			byte[] t = xor(dbl(d), pad(plaintext));
+			return cmac.doFinal(t);
 		}
-
-		return mac(cmac, t);
-	}
-
-	private static byte[] mac(Mac mac, byte[] in) {
-		return mac.doFinal(in);
 	}
 }

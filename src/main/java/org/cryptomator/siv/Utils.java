@@ -51,13 +51,4 @@ public class Utils {
 		return out;
 	}
 
-	static byte[] xorend(byte[] in1, byte[] in2) {
-		assert in1.length >= in2.length : "Length of first input must be >= length of second input.";
-		final int diff = in1.length - in2.length;
-		for (int i = 0; i < in2.length; i++) {
-			in1[i + diff] = (byte) (in1[i + diff] ^ in2[i]);
-		}
-		return in1;
-	}
-
 }
