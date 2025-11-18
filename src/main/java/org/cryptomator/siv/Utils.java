@@ -40,11 +40,15 @@ public class Utils {
 	}
 
 	static byte[] xor(byte[] in1, byte[] in2) {
+		return xor(in1, in2, in1);
+	}
+
+	static byte[] xor(byte[] in1, byte[] in2, byte[] out) {
 		assert in1.length <= in2.length : "Length of first input must be <= length of second input.";
 		for (int i = 0; i < in1.length; i++) {
-			in1[i] = (byte) (in1[i] ^ in2[i]);
+			out[i] = (byte) (in1[i] ^ in2[i]);
 		}
-		return in1;
+		return out;
 	}
 
 	static byte[] xorend(byte[] in1, byte[] in2) {

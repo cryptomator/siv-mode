@@ -178,11 +178,12 @@ public final class SivEngine {
 		// S1 = associatedData1, S2 = associatedData2, ... Sn = plaintext
 		// Since this method is invoked only by encrypt/decrypt, we always have a plaintext.
 		// Thus n > 0
+		assert associatedData.length > 0;
 
 		byte[] d = mac(cmac, BYTES_ZERO);
 
 		for (byte[] s : associatedData) {
-			d = xor(dbl(d), mac(cmac, s));
+			xor(dbl(d), mac(cmac, s), d);
 		}
 
 		final byte[] t;
