@@ -7,12 +7,14 @@ import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
+import javax.crypto.AEADBadTagException;
 import javax.crypto.IllegalBlockSizeException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -29,22 +31,25 @@ public class SivModeBenchmark {
 
 	private int run;
 	private final byte[] key = new byte[32];
-	private final byte[] cleartextData = new byte[1000];
+	@Param({"1024", "1048576", "10485760"})
+	private int cleartextDataSize;
+	private byte[] cleartextData;
 	private final byte[] associatedData = new byte[100];
 
-	private SivMode siv;
+	private SivEngine siv;
 
 	@Setup(Level.Trial)
 	public void shuffleData() {
 		run++;
 		Arrays.fill(key, (byte) (run & 0xFF));
-		siv = new SivMode(key);
+		siv = new SivEngine(key);
+		cleartextData = new byte[cleartextDataSize];
 		Arrays.fill(cleartextData, (byte) (run & 0xFF));
 		Arrays.fill(associatedData, (byte) (run & 0xFF));
 	}
 
 	@Benchmark
-	public void benchmarkJce(Blackhole bh) throws UnauthenticCiphertextException, IllegalBlockSizeException {
+	public void benchmarkJce(Blackhole bh) throws AEADBadTagException, IllegalBlockSizeException {
 		byte[] encrypted = siv.encrypt(cleartextData, associatedData);
 		byte[] decrypted = siv.decrypt(encrypted, associatedData);
 		Assertions.assertArrayEquals(cleartextData, decrypted);

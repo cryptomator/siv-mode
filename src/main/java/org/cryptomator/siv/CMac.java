@@ -22,7 +22,7 @@ import static org.cryptomator.siv.Utils.xor;
  */
 public class CMac extends MacSpi {
 
-	private static final int BLOCK_SIZE = 16; // 128 bits for AES
+	static final int BLOCK_SIZE = 16; // 128 bits for AES
 	private static final String AES_ALGORITHM = "AES";
 	private static final String AES_ECB_NO_PADDING = "AES/ECB/NoPadding";
 

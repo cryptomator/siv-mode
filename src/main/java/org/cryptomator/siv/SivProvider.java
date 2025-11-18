@@ -10,6 +10,7 @@ public class SivProvider extends Provider {
 	public SivProvider() {
 		super("SIV", 2.0, "");
 		putService(new Service(this, "Mac", "CMAC", CMac.class.getName(), null, new HashMap<>()));
+		putService(new Service(this, "Cipher", "AES/SIV/NoPadding", SivCipher.class.getName(), null, new HashMap<>()));
 	}
 
 }

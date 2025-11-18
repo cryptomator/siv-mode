@@ -1,11 +1,13 @@
 package org.cryptomator.siv;
 
+import javax.crypto.AEADBadTagException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidAlgorithmParameterException;
@@ -21,8 +23,9 @@ import static org.cryptomator.siv.Utils.xorend;
 /**
  * Implements the RFC 5297 SIV mode.
  */
-public final class SivMode {
+public final class SivEngine {
 
+	private static final int IV_LENGTH = CMac.BLOCK_SIZE;
 	private static final byte[] BYTES_ZERO = new byte[16];
 
 	private final SecretKey macKey;
@@ -36,7 +39,7 @@ public final class SivMode {
 	 *
 	 * @param key A 256, 384, or 512 bit key. The first half is used for nonce generation, the second half for encryption
 	 */
-	public SivMode(byte[] key) {
+	public SivEngine(byte[] key) {
 		if (key.length != 64 && key.length != 48 && key.length != 32) {
 			throw new IllegalArgumentException("Key length must be 256, 384, or 512 bits.");
 		}
@@ -74,19 +77,29 @@ public final class SivMode {
 	 * @throws IllegalArgumentException if either param exceeds the limits for safe use.
 	 */
 	public byte[] encrypt(byte[] plaintext, byte[]... associatedData) {
+		final byte[] ciphertext = new byte[16 + plaintext.length];
+		try {
+			int encrypted = encrypt(plaintext, ciphertext, 0, associatedData);
+			assert encrypted == ciphertext.length;
+		} catch (ShortBufferException e) {
+			throw new IllegalStateException(e);
+		}
+		return ciphertext;
+	}
+
+	public int encrypt(byte[] input, byte[] output, int outputOffset, byte[]... associatedData) throws ShortBufferException {
 		// Check if plaintext length will cause overflows
-		if (plaintext.length > (Integer.MAX_VALUE - 16)) {
+		if (input.length > (Integer.MAX_VALUE - IV_LENGTH)) {
 			throw new IllegalArgumentException("Plaintext is too long");
 		}
 
-		final byte[] iv = s2v(plaintext, associatedData);
-		final byte[] ciphertext = computeCtr(plaintext, iv);
-
-		// concat IV + ciphertext:
-		final byte[] result = new byte[iv.length + ciphertext.length];
-		System.arraycopy(iv, 0, result, 0, iv.length);
-		System.arraycopy(ciphertext, 0, result, iv.length, ciphertext.length);
-		return result;
+		if (output.length - outputOffset < IV_LENGTH + input.length) {
+			throw new ShortBufferException();
+		}
+		byte[] iv = s2v(input, associatedData);
+		assert iv.length == IV_LENGTH;
+		System.arraycopy(iv, 0, output, 0, IV_LENGTH);
+		return IV_LENGTH + computeCtr(input, iv, output, IV_LENGTH);
 	}
 
 	/**
@@ -95,16 +108,16 @@ public final class SivMode {
 	 * @param ciphertext     Your ciphertext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
-	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
+	 * @throws AEADBadTagException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
 	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
 	 */
-	public byte[] decrypt(byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
-		if (ciphertext.length < 16) {
+	public byte[] decrypt(byte[] ciphertext, byte[]... associatedData) throws AEADBadTagException, IllegalBlockSizeException {
+		if (ciphertext.length < IV_LENGTH) {
 			throw new IllegalBlockSizeException("Input length must be greater than or equal 16.");
 		}
 
-		final byte[] iv = Arrays.copyOf(ciphertext, 16);
-		final byte[] actualCiphertext = Arrays.copyOfRange(ciphertext, 16, ciphertext.length);
+		final byte[] iv = Arrays.copyOf(ciphertext, IV_LENGTH);
+		final byte[] actualCiphertext = Arrays.copyOfRange(ciphertext, IV_LENGTH, ciphertext.length);
 		final byte[] plaintext = computeCtr(actualCiphertext, iv);
 		final byte[] control = s2v(plaintext, associatedData);
 
@@ -118,12 +131,24 @@ public final class SivMode {
 		if (diff == 0) {
 			return plaintext;
 		} else {
-			throw new UnauthenticCiphertextException("authentication in SIV decryption failed");
+			throw new AEADBadTagException("authentication in SIV decryption failed");
 		}
 	}
 
 	// visible for testing
 	byte[] computeCtr(byte[] input, final byte[] iv) {
+		byte[] output = new byte[input.length];
+		try {
+			int processed = computeCtr(input, iv, output, 0);
+			assert processed == output.length;
+		} catch (ShortBufferException e) {
+			throw new IllegalStateException(e);
+		}
+		return output;
+	}
+
+	// visible for testing
+	int computeCtr(byte[] input, final byte[] iv, byte[] output, int outputOffset) throws ShortBufferException {
 		// clear out the 31st and 63rd (rightmost) bit:
 		final byte[] adjustedIv = Arrays.copyOf(iv, 16);
 		adjustedIv[8] = (byte) (adjustedIv[8] & 0x7F);
@@ -131,7 +156,7 @@ public final class SivMode {
 
 		try {
 			ctrCipher.init(Cipher.ENCRYPT_MODE, ctrKey, new IvParameterSpec(adjustedIv));
-			return ctrCipher.doFinal(input);
+			return ctrCipher.doFinal(input, 0, input.length, output, outputOffset);
 		} catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
 			throw new IllegalArgumentException("Key or IV invalid.");
 		} catch (BadPaddingException e) {
@@ -173,5 +198,4 @@ public final class SivMode {
 	private static byte[] mac(Mac mac, byte[] in) {
 		return mac.doFinal(in);
 	}
-
 }

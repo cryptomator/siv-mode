@@ -28,16 +28,16 @@
 
 ## Usage
 ```java
-private static final SivMode AES_SIV = new SivMode();
+SivMode AES_SIV = new SivMode(key);
 
 public void encrypt() {
-  byte[] encrypted = AES_SIV.encrypt(ctrKey, macKey, "hello world".getBytes());
-  byte[] decrypted = AES_SIV.decrypt(ctrKey, macKey, encrypted);
+  byte[] encrypted = AES_SIV.encrypt("hello world".getBytes());
+  byte[] decrypted = AES_SIV.decrypt(encrypted);
 }
 
 public void encryptWithAssociatedData() {
-  byte[] encrypted = AES_SIV.encrypt(ctrKey, macKey, "hello world".getBytes(), "associated".getBytes(), "data".getBytes());
-  byte[] decrypted = AES_SIV.decrypt(ctrKey, macKey, encrypted, "associated".getBytes(), "data".getBytes());
+  byte[] encrypted = AES_SIV.encrypt("hello world".getBytes(), "associated".getBytes(), "data".getBytes());
+  byte[] decrypted = AES_SIV.decrypt(encrypted, "associated".getBytes(), "data".getBytes());
 }
 ```
 
