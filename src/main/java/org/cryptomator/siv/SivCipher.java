@@ -18,6 +18,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * JCE Cipher implementation for AES-SIV mode.
+ * <p>
+ * This cipher implements the Synthetic Initialization Vector (SIV) mode as specified in RFC 5297.
+ */
 public class SivCipher extends CipherSpi {
 
 	private static final byte[] EMPTY = new byte[0];

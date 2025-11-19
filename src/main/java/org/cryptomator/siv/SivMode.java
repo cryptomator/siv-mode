@@ -68,7 +68,7 @@ public final class SivMode {
 	 * @param plaintext      Your plaintext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
-	 * @throws IllegalArgumentException if the either of the two keys is of invalid length for the used {@link BlockCipher}.
+	 * @throws IllegalArgumentException if the either of the two keys is of invalid length.
 	 */
 	public byte[] encrypt(byte[] ctrKey, byte[] macKey, byte[] plaintext, byte[]... associatedData) {
 		byte[] combinedKey = new byte[ctrKey.length + macKey.length];

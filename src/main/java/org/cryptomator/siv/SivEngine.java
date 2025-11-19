@@ -21,6 +21,11 @@ import static org.cryptomator.siv.Utils.xor;
 
 /**
  * Implements the RFC 5297 SIV mode.
+ * <p>
+ * Note: Instances of this class are not thread-safe.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc5297">RFC 5297</a>
+ * @since 2.0
  */
 public final class SivEngine {
 
@@ -86,6 +91,17 @@ public final class SivEngine {
 		return ciphertext;
 	}
 
+	/**
+	 * Encrypts plaintext using SIV mode and writes the result to the provided output buffer.
+	 *
+	 * @param plaintext      Your plaintext, which shall be encrypted.
+	 * @param output         The output buffer to write IV + ciphertext to.
+	 * @param outputOffset   The offset in the output buffer to start writing at.
+	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
+	 * @return The number of bytes written to the output buffer (should always be {@value IV_LENGTH} + plaintext length).
+	 * @throws ShortBufferException     If the output buffer is too small.
+	 * @throws IllegalArgumentException if either param exceeds the limits for safe use.
+	 */
 	public int encrypt(byte[] plaintext, byte[] output, int outputOffset, byte[]... associatedData) throws ShortBufferException {
 		// Check if plaintext length will cause overflows
 		if (plaintext.length > (Integer.MAX_VALUE - IV_LENGTH)) {
@@ -104,11 +120,12 @@ public final class SivEngine {
 	/**
 	 * Decrypts ciphertext using SIV mode. A block cipher defined by the constructor is being used.<br>
 	 *
-	 * @param ciphertext     Your ciphertext, which shall be encrypted.
+	 * @param ciphertext     Your ciphertext, which shall be decrypted.
 	 * @param associatedData Optional associated data, which needs to be authenticated during decryption.
 	 * @return Plaintext byte array.
-	 * @throws AEADBadTagException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
-	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
+	 * @throws AEADBadTagException       If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
+	 * @throws IllegalBlockSizeException If the provided ciphertext is shorter than 16 bytes.
+	 * @throws IllegalArgumentException  If number of associatedData fields exceed the limits for safe use.
 	 */
 	public byte[] decrypt(byte[] ciphertext, byte[]... associatedData) throws AEADBadTagException, IllegalBlockSizeException {
 		if (ciphertext.length < IV_LENGTH) {

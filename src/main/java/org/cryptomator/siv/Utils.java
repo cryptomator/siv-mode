@@ -2,6 +2,11 @@ package org.cryptomator.siv;
 
 import java.util.Arrays;
 
+/**
+ * Utility methods for cryptographic operations.
+ * <p>
+ * Provides bit manipulation and padding operations used in AES-SIV mode.
+ */
 public class Utils {
 
 	private static final byte DOUBLING_CONST = (byte) 0x87;

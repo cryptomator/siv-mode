@@ -157,6 +157,9 @@ public class CMac extends MacSpi {
 
 	/**
 	 * Create a new CMAC instance for incremental message processing
+	 * @param key The AES key (16, 24, or 32 bytes)
+	 * @return The CMAC instance
+	 * @throws IllegalArgumentException if the key length is invalid
 	 */
 	public static CMac create(byte[] key) {
 		if (key.length != 16 && key.length != 24 && key.length != 32) {
@@ -175,6 +178,10 @@ public class CMac extends MacSpi {
 
 	/**
 	 * One-shot CMAC computation
+	 * @param key The AES key (16, 24, or 32 bytes)
+	 * @param message The message to authenticate
+	 * @return The CMAC tag (always {@value BLOCK_SIZE} bytes)
+	 * @throws IllegalArgumentException if the key length is invalid
 	 */
 	public static byte[] tag(byte[] key, byte[] message) {
 		CMac cmac = create(key);
