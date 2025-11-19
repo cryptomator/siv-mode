@@ -3,18 +3,25 @@ on:
   push:
   pull_request_target:
     types: [labeled]
+
+env:
+  JAVA_VERSION: 21
+
 jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for the attestations step
+      attestations: write # Required for the attestations step
+    outputs:
+      sha256: ${{ steps.checksums.outputs.sha256 }}
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
       - uses: actions/setup-java@v5
         with:
-          java-version: 21
-          distribution: 'zulu'
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
           cache: 'maven'
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
@@ -24,10 +31,10 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
       - name: Ensure to use tagged version
         if: startsWith(github.ref, 'refs/tags/')
-        run: ./mvnw -B versions:set --file ./pom.xml -DnewVersion=${GITHUB_REF##*/}
+        run: ./mvnw versions:set --file ./pom.xml -DnewVersion=${GITHUB_REF##*/}
       - name: Build and Test
         run: >
-          ./mvnw -B verify
+          ./mvnw -B verify --no-transfer-progress
           jacoco:report
           org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
           -Pcoverage
@@ -37,10 +44,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      - uses: actions/upload-artifact@v5
-        with:
-          name: artifacts
-          path: target/*.jar
       - name: Calculate Checksums
         id: checksums
         run: |
@@ -49,11 +52,89 @@ jobs:
             shasum -a256 target/*.jar
             echo EOF
           } >> $GITHUB_OUTPUT
-      - name: Create Release
+      - name: Attest
         if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: |
+            target/*.jar
+            target/*.pom
+      - uses: actions/upload-artifact@v5
+        with:
+          name: artifacts
+          path: target/*.jar
+
+  deploy-central:
+    name: Deploy to Maven Central
+    runs-on: ubuntu-latest
+    permissions: {}
+    needs: [build]
+    if: github.repository_owner == 'cryptomator' && (startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[deploy]'))
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'maven'
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+      - name: Verify project version matches tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          PROJECT_VERSION=$(./mvnw help:evaluate "-Dexpression=project.version" -q -DforceStdout)
+          test "$PROJECT_VERSION" = "${GITHUB_REF##*/}"
+      - name: Deploy to Maven Central
+        run: ./mvnw deploy -B -DskipTests -Psign,deploy-central --no-transfer-progress
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.RELEASES_GPG_PASSPHRASE }}
+          MAVEN_GPG_KEY: ${{ secrets.RELEASES_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
+          MAVEN_GPG_KEY_FINGERPRINT: ${{ vars.RELEASES_GPG_KEY_FINGERPRINT }}
+
+  deploy-github:
+    name: Deploy to GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write # Required for the deploy to GitHub Packages step
+    needs: [build]
+    if: github.repository_owner == 'cryptomator' && (startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[deploy]'))
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+      - name: Verify project version matches tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          PROJECT_VERSION=$(./mvnw help:evaluate "-Dexpression=project.version" -q -DforceStdout)
+          test "$PROJECT_VERSION" = "${GITHUB_REF##*/}"
+      - name: Deploy to GitHub Packages
+        run: ./mvnw deploy -B -DskipTests -Psign,deploy-github --no-transfer-progress
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.RELEASES_GPG_PASSPHRASE }}
+          MAVEN_GPG_KEY: ${{ secrets.RELEASES_GPG_PRIVATE_KEY }} # Value of the GPG private key to import
+          MAVEN_GPG_KEY_FINGERPRINT: ${{ vars.RELEASES_GPG_KEY_FINGERPRINT }}
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required for the release step
+    needs: [build, deploy-central, deploy-github]
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          prerelease: true
           token: ${{ secrets.CRYPTOBOT_RELEASE_TOKEN }}
+          generate_release_notes: true
           body: |-
             ### Maven Coordinates
             ```xml
@@ -66,8 +147,7 @@ jobs:
 
             ### Artifact Checksums
             ```txt
-            ${{ steps.checksums.outputs.sha256 }}
+            ${{ needs.build.outputs.sha256 }}
             ```
 
             See [README.md](https://github.com/cryptomator/siv-mode/#reproducible-builds) section regarding reproducing this build.
-          generate_release_notes: true
