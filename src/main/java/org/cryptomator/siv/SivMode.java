@@ -7,6 +7,8 @@ import java.util.Arrays;
 
 /**
  * Implements the RFC 5297 SIV mode.
+ *
+ * @deprecated Use {@link SivEngine} instead.
  */
 @Deprecated
 public final class SivMode {
@@ -23,7 +25,9 @@ public final class SivMode {
 	 * @param plaintext Your plaintext, which shall be encrypted.
 	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
+	 * @deprecated Use {@link SivEngine#encrypt(byte[], byte[]...)} instead.
 	 */
+	@Deprecated
 	public byte[] encrypt(SecretKey key, byte[] plaintext, byte[]... associatedData) {
 		final byte[] keyBytes = key.getEncoded();
 		if (keyBytes == null) {
@@ -45,7 +49,9 @@ public final class SivMode {
 	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
 	 * @throws IllegalArgumentException if keys are invalid or {@link SecretKey#getEncoded()} is not supported.
+	 * @deprecated Use {@link SivEngine#encrypt(byte[], byte[]...)} instead.
 	 */
+	@Deprecated
 	public byte[] encrypt(SecretKey ctrKey, SecretKey macKey, byte[] plaintext, byte[]... associatedData) {
 		final byte[] ctrKeyBytes = ctrKey.getEncoded();
 		final byte[] macKeyBytes = macKey.getEncoded();
@@ -69,7 +75,9 @@ public final class SivMode {
 	 * @param associatedData Optional associated data, which gets authenticated but not encrypted.
 	 * @return IV + Ciphertext as a concatenated byte array.
 	 * @throws IllegalArgumentException if the either of the two keys is of invalid length.
+	 * @deprecated Use {@link SivEngine#encrypt(byte[], byte[]...)} instead.
 	 */
+	@Deprecated
 	public byte[] encrypt(byte[] ctrKey, byte[] macKey, byte[] plaintext, byte[]... associatedData) {
 		byte[] combinedKey = new byte[ctrKey.length + macKey.length];
 		try {
@@ -90,7 +98,9 @@ public final class SivMode {
 	 * @throws IllegalArgumentException       If keys are invalid.
 	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
 	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
+	 * @deprecated Use {@link SivEngine#decrypt(byte[], byte[]...)} instead.
 	 */
+	@Deprecated
 	public byte[] decrypt(SecretKey key, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		final byte[] keyBytes = key.getEncoded();
 		if (keyBytes == null) {
@@ -116,7 +126,9 @@ public final class SivMode {
 	 * @throws IllegalArgumentException       If keys are invalid or {@link SecretKey#getEncoded()} is not supported.
 	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
 	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
+	 * @deprecated Use {@link SivEngine#decrypt(byte[], byte[]...)} instead.
 	 */
+	@Deprecated
 	public byte[] decrypt(SecretKey ctrKey, SecretKey macKey, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		final byte[] ctrKeyBytes = ctrKey.getEncoded();
 		final byte[] macKeyBytes = macKey.getEncoded();
@@ -142,7 +154,9 @@ public final class SivMode {
 	 * @throws IllegalArgumentException       If the either of the two keys is of invalid length.
 	 * @throws UnauthenticCiphertextException If the authentication failed, e.g. because ciphertext and/or associatedData are corrupted.
 	 * @throws IllegalBlockSizeException      If the provided ciphertext is of invalid length.
+	 * @deprecated Use {@link SivEngine#decrypt(byte[], byte[]...)} instead.
 	 */
+	@Deprecated
 	public byte[] decrypt(byte[] ctrKey, byte[] macKey, byte[] ciphertext, byte[]... associatedData) throws UnauthenticCiphertextException, IllegalBlockSizeException {
 		byte[] combinedKey = new byte[ctrKey.length + macKey.length];
 		try {
