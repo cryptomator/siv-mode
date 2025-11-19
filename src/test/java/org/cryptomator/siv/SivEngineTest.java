@@ -170,6 +170,14 @@ public class SivEngineTest {
 		}
 
 		@Test
+		public void testSivEncryptWithOffset() throws ShortBufferException {
+			final byte[] result = new byte[ciphertext.length + 10];
+			int encrypted = new SivEngine(key).encrypt(plaintext, result, 10, ad);
+			Assertions.assertEquals(ciphertext.length, encrypted);
+			Assertions.assertArrayEquals(ciphertext, Arrays.copyOfRange(result, 10, result.length));
+		}
+
+		@Test
 		public void testSivDecrypt() throws AEADBadTagException, IllegalBlockSizeException {
 			final byte[] result = new SivEngine(key).decrypt(ciphertext, ad);
 			Assertions.assertArrayEquals(plaintext, result);

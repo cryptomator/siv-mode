@@ -58,11 +58,14 @@ public class CMac extends MacSpi {
 		try {
 			// L = AES_encrypt(K, const_Zero)
 			encryptBlock(cipher, L, L);
-			this.k1 = dbl(L).clone();
-			this.k2 = dbl(L).clone();
+			this.k1 = dbl(L.clone());
+			this.k2 = dbl(k1.clone());
 		} finally {
 			Arrays.fill(L, (byte) 0);
 		}
+
+		// reset state
+		engineReset();
 	}
 
 	@Override

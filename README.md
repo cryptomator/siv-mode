@@ -11,7 +11,6 @@
 - No dependencies
 - Passes official RFC 5297 test vectors
 - Constant time authentication
-- Thread-safe
 - [Fast](https://github.com/cryptomator/siv-mode/issues/15)
 - Requires JDK 8+ or Android API Level 24+ (since version 1.4.0)
 

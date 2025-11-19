@@ -78,7 +78,7 @@ class SivCipherTest {
 	@ValueSource(ints = {16, 24, 1337})
 	public void testEngineInitWithInvalidKeySize(int keysize) {
 		SecretKeySpec key = new SecretKeySpec(new byte[keysize], "AES");
-		Assertions.assertThrows(InvalidKeyException.class,() -> cipher.engineInit(Cipher.ENCRYPT_MODE, key, null));
+		Assertions.assertThrows(InvalidKeyException.class, () -> cipher.engineInit(Cipher.ENCRYPT_MODE, key, null));
 	}
 
 	@Test
@@ -131,5 +131,20 @@ class SivCipherTest {
 
 		// compare:
 		Assertions.assertEquals("helloworld!", new String(unwrapped, StandardCharsets.UTF_8));
+	}
+
+	@Test
+	public void testReuseCipher() throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+		byte[] plaintext = "helloworld".getBytes(StandardCharsets.UTF_8);
+		cipher.engineInit(Cipher.ENCRYPT_MODE, key, null);
+		byte[] encrypted1 = cipher.engineDoFinal(plaintext, 0, plaintext.length);
+		byte[] encrypted2 = cipher.engineDoFinal(plaintext, 0, plaintext.length);
+		cipher.engineInit(Cipher.DECRYPT_MODE, key, null);
+		byte[] decrypted1 = cipher.engineDoFinal(encrypted1, 0, encrypted1.length);
+		byte[] decrypted2 = cipher.engineDoFinal(encrypted2, 0, encrypted2.length);
+
+		Assertions.assertArrayEquals(encrypted1, encrypted2);
+		Assertions.assertArrayEquals(plaintext, decrypted1);
+		Assertions.assertArrayEquals(plaintext, decrypted2);
 	}
 }

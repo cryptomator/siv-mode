@@ -123,10 +123,15 @@ public class SivCipher extends CipherSpi {
 
 	@Override
 	protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) throws IllegalBlockSizeException, BadPaddingException {
-		byte[] output = new byte[engineGetOutputSize(inputBuffer.length + inputLen)];
+		int outputSize = engineGetOutputSize(inputBuffer.length + inputLen);
+		if (outputSize < 0) {
+			throw new IllegalBlockSizeException("Ciphertext too short (must be at least 16 bytes including SIV tag)");
+		}
+		byte[] output = new byte[outputSize];
 		try {
 			engineDoFinal(input, inputOffset, inputLen, output, 0);
 		} catch (ShortBufferException e) {
+			// outputSize was calculated before, so this should never happen
 			throw new IllegalStateException(e);
 		}
 		return output;
@@ -134,23 +139,38 @@ public class SivCipher extends CipherSpi {
 
 	@Override
 	protected int engineDoFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset) throws ShortBufferException, IllegalBlockSizeException, BadPaddingException {
+		int outputSize = engineGetOutputSize(inputBuffer.length + inputLen);
+		if (outputSize < 0) {
+			throw new IllegalBlockSizeException("Ciphertext too short (must be at least 16 bytes including SIV tag)");
+		}
 		int availableSpace = output.length - outputOffset;
-		if (availableSpace < engineGetOutputSize(inputBuffer.length + inputLen)) {
+		if (availableSpace < outputSize) {
 			throw new ShortBufferException();
 		}
 		engineUpdate(input, inputOffset, inputLen);
 
+		int resultLength;
 		SivEngine siv = new SivEngine(this.key);
 		byte[][] aad = this.aad.toArray(new byte[this.aad.size()][]);
 		if (this.opmode == Cipher.ENCRYPT_MODE || this.opmode == Cipher.WRAP_MODE) {
-			return siv.encrypt(inputBuffer, output, outputOffset, aad);
+			resultLength = siv.encrypt(inputBuffer, output, outputOffset, aad);
 		} else if (this.opmode == Cipher.DECRYPT_MODE || this.opmode == Cipher.UNWRAP_MODE) {
 			// for security reasons we can't write into output directly before checking integrity:
-			byte[] plaintext = siv.decrypt(inputBuffer, aad);
-			System.arraycopy(plaintext, 0, output, outputOffset, plaintext.length);
-			return plaintext.length;
+			byte[] plaintext = new byte[0];
+			try {
+				plaintext = siv.decrypt(inputBuffer, aad);
+				System.arraycopy(plaintext, 0, output, outputOffset, plaintext.length);
+				resultLength = plaintext.length;
+			} finally {
+				Arrays.fill(plaintext, (byte) 0x00);
+			}
 		} else {
 			throw new IllegalStateException("Invalid opmode " + this.opmode);
 		}
+
+		// reset internal state:
+		this.inputBuffer = EMPTY;
+		this.aad.clear();
+		return resultLength;
 	}
 }

@@ -1,10 +1,14 @@
 package org.cryptomator.siv;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.converter.ArgumentConversionException;
 import org.junit.jupiter.params.converter.ConvertWith;
 import org.junit.jupiter.params.converter.SimpleArgumentConverter;
 import org.junit.jupiter.params.provider.CsvSource;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -22,17 +26,24 @@ class CMacTest {
 				throw new ArgumentConversionException("Source must be a String");
 			}
 			String hex = (String) source;
-			if (hex.isEmpty()) {
-				return new byte[0];
-			}
-			int len = hex.length();
-			byte[] data = new byte[len / 2];
-			for (int i = 0; i < len; i += 2) {
-				data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
-						+ Character.digit(hex.charAt(i + 1), 16));
-			}
-			return data;
+			return hexToBytes(hex);
 		}
+	}
+
+	/**
+	 * Convert hex string to byte array
+	 */
+	private static byte[] hexToBytes(String hex) {
+		if (hex.isEmpty()) {
+			return new byte[0];
+		}
+		int len = hex.length();
+		byte[] data = new byte[len / 2];
+		for (int i = 0; i < len; i += 2) {
+			data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+					+ Character.digit(hex.charAt(i + 1), 16));
+		}
+		return data;
 	}
 
 	/**
@@ -82,6 +93,21 @@ class CMacTest {
 						 String expectedHex) {
 		byte[] result = CMac.tag(key, message);
 		assertEquals(expectedHex, bytesToHex(result), testName + " failed");
+	}
+
+	@Test
+	public void testReset() {
+		byte[] key = hexToBytes("2b7e151628aed2a6abf7158809cf4f3c");
+		byte[] incorrectInput = "oops, never ment to update with this data!".getBytes(StandardCharsets.UTF_8);
+		byte[] correctInput = hexToBytes("6bc1bee22e409f96e93d7e117393172a");
+
+		CMac cmac = CMac.create(key);
+		cmac.engineUpdate(incorrectInput, 0, incorrectInput.length);
+		cmac.engineReset();
+		cmac.engineUpdate(correctInput, 0, correctInput.length);
+		byte[] tag = cmac.engineDoFinal();
+
+		assertEquals("070a16b46b4d4144f79bdd9dd04a287c", bytesToHex(tag));
 	}
 
 }

@@ -113,8 +113,8 @@ public final class SivEngine {
 		}
 		byte[] iv = s2v(plaintext, associatedData);
 		assert iv.length == IV_LENGTH;
-		System.arraycopy(iv, 0, output, 0, IV_LENGTH);
-		return IV_LENGTH + computeCtr(plaintext, 0, plaintext.length, iv, 0, IV_LENGTH, output, IV_LENGTH);
+		System.arraycopy(iv, 0, output, outputOffset, IV_LENGTH);
+		return IV_LENGTH + computeCtr(plaintext, 0, plaintext.length, iv, 0, IV_LENGTH, output, outputOffset + IV_LENGTH);
 	}
 
 	/**
@@ -213,7 +213,7 @@ public final class SivEngine {
 			return cmac.doFinal(end);
 		} else {
 			// T = dbl(D) xor pad(Sn)
-			byte[] t = xor(dbl(d), pad(plaintext));
+			byte[] t = xor(dbl(d), pad(plaintext, 16));
 			return cmac.doFinal(t);
 		}
 	}

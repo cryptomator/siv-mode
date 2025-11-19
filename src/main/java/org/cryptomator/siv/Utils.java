@@ -12,8 +12,8 @@ public class Utils {
 	private static final byte DOUBLING_CONST = (byte) 0x87;
 
 	// First bit 1, following bits 0.
-	static byte[] pad(byte[] in) {
-		final byte[] result = Arrays.copyOf(in, 16);
+	static byte[] pad(byte[] in, int desiredLength) {
+		final byte[] result = Arrays.copyOf(in, desiredLength);
 		result[in.length] = (byte) 0x80;
 		return result;
 	}
