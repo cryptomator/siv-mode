@@ -7,13 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/cryptomator/siv-mode/compare/1.6.0...HEAD)
 
+### Added
+- new lowlevel API:
+   * `new SivEngine(key).encrypt(plaintext, associatedData...)`
+   * `new SivEngine(key).decrypt(plaintext, associatedData...)`
+- implement JCA `Cipher` SPI:
+    ```
+    Cipher siv = Cipher.getInstance("AES/SIV/NoPadding");
+    siv.init(Cipher.ENCRYPT_MODE, key);
+    siv.updateAAD(aad1);
+    siv.updateAAD(aad2);
+    byte[] ciphertext = siv.doFinal(plaintext);
+    ```
+  
+### Changed
+- remove dependencies on BouncyCastle and Jetbrains Annotations
+- simplify build by removing `maven-shade-plugin`
+- update test dependencies
+- update build plugins
+
+### Deprecated
+- old lowlevel API:
+  * `new SivMode().encrypt(ctrKey, macKey, encrypted)`
+  * `new SivMode().decrypt(ctrKey, macKey, ciphertext)`
+  
+
 ## [1.6.0](https://github.com/cryptomator/siv-mode/compare/1.5.2...1.6.0)
 
 ### Added
-
 - This CHANGELOG file
 - `encrypt(SecretKey key, byte[] plaintext, byte[]... associatedData)` and `decrypt(SecretKey key, byte[] ciphertext, byte[]... associatedData)` using a single 256, 384, or 512 bit key
 
 ### Changed
-
 - use `maven-gpg-plugin`'s bc-based signer 
