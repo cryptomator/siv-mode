@@ -82,4 +82,9 @@ public class EncryptionTestCase {
 	public byte[] getCiphertext() {
 		return Arrays.copyOf(ciphertext, ciphertext.length);
 	}
+
+	@Override
+	public String toString() {
+		return "TestCase #" + testCaseNumber;
+	}
 }

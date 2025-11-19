@@ -1,12 +1,17 @@
 package org.cryptomator.siv;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicContainer;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.FieldSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.crypto.AEADBadTagException;
@@ -16,9 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -293,115 +299,154 @@ public class SivEngineTest {
 
 	}
 
-	@TestFactory
-	public Stream<DynamicContainer> testGeneratedTestCases() {
-		InputStream in = EncryptionTestCase.class.getResourceAsStream("/testcases.txt");
-		Reader reader = new InputStreamReader(in, StandardCharsets.US_ASCII);
-		BufferedReader bufferedReader = new BufferedReader(reader);
-		Stream<String> lines = bufferedReader.lines().onClose(() -> {
-			try {
-				bufferedReader.close();
-			} catch (IOException e) {
-				throw new UncheckedIOException(e);
+	@Nested
+	@DisplayName("Generated Test Cases")
+	@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+	public class GeneratedTestCases {
+
+		private List<EncryptionTestCase> testCases;
+
+		@BeforeAll
+		public void loadTestCases() throws IOException {
+			try (InputStream in = EncryptionTestCase.class.getResourceAsStream("/testcases.txt");
+				 Reader reader = new InputStreamReader(in, StandardCharsets.US_ASCII);
+				 BufferedReader bufferedReader = new BufferedReader(reader)) {
+				this.testCases = bufferedReader.lines().map(EncryptionTestCase::fromLine).collect(Collectors.toList());
 			}
-		});
-		return lines.map(EncryptionTestCase::fromLine).map(testCase -> {
-			int testIdx = testCase.getTestCaseNumber();
+		}
+
+		@DisplayName("decrypt")
+		@ParameterizedTest(name = "{0}")
+		@FieldSource("testCases")
+		public void testDecrypt(EncryptionTestCase testCase) throws AEADBadTagException, IllegalBlockSizeException {
 			SivEngine siv = new SivEngine(testCase.getKey());
-			return DynamicContainer.dynamicContainer("test case " + testIdx, Arrays.asList(
-					DynamicTest.dynamicTest("decrypt", () -> {
-						byte[] actualPlaintext = siv.decrypt(testCase.getCiphertext(), testCase.getAssociatedData());
-						Assertions.assertArrayEquals(testCase.getPlaintext(), actualPlaintext);
-					}),
-					DynamicTest.dynamicTest("encrypt", () -> {
-						byte[] actualCiphertext = siv.encrypt(testCase.getPlaintext(), testCase.getAssociatedData());
-						Assertions.assertArrayEquals(testCase.getCiphertext(), actualCiphertext);
-					}),
-					DynamicTest.dynamicTest("decrypt fails due to tampered mac key", () -> {
-						byte[] key = testCase.getKey();
+			byte[] actualPlaintext = siv.decrypt(testCase.getCiphertext(), testCase.getAssociatedData());
+			Assertions.assertArrayEquals(testCase.getPlaintext(), actualPlaintext);
+		}
 
-						// Pick some arbitrary byte from first half of key (i.e. the MAC key) to tamper with
-						int halfKeyLen = key.length / 2;
-						int tamperedByteIndex = testIdx % halfKeyLen;
+		@DisplayName("encrypt")
+		@ParameterizedTest(name = "{0}")
+		@FieldSource("testCases")
+		public void testEncrypt(EncryptionTestCase testCase) {
+			SivEngine siv = new SivEngine(testCase.getKey());
+			byte[] actualCiphertext = siv.encrypt(testCase.getPlaintext(), testCase.getAssociatedData());
+			Assertions.assertArrayEquals(testCase.getCiphertext(), actualCiphertext);
+		}
 
-						// Flip a single bit
-						key[tamperedByteIndex] ^= 0x10;
+		@DisplayName("decrypt fails due to tampered mac key")
+		@ParameterizedTest(name = "{0}")
+		@FieldSource("testCases")
+		public void testDecryptFailsDueToTamperedMacKey(EncryptionTestCase testCase) {
+			byte[] key = testCase.getKey();
 
-						SivEngine sivWithTamperedKey = new SivEngine(key);
+			// Pick some arbitrary byte from first half of key (i.e. the MAC key) to tamper with
+			int halfKeyLen = key.length / 2;
+			int tamperedByteIndex = testCase.getTestCaseNumber() % halfKeyLen;
 
-						Assertions.assertThrows(AEADBadTagException.class, () -> {
-							sivWithTamperedKey.decrypt(testCase.getCiphertext(), testCase.getAssociatedData());
-						});
-					}),
-					DynamicTest.dynamicTest("decrypt fails due to tampered ciphertext", () -> {
-						byte[] ciphertext = testCase.getCiphertext();
+			// Flip a single bit
+			key[tamperedByteIndex] ^= 0x10;
 
-						// Pick some arbitrary key byte to tamper with
-						int tamperedByteIndex = testIdx % ciphertext.length;
+			SivEngine sivWithTamperedKey = new SivEngine(key);
 
-						// Flip a single bit
-						ciphertext[tamperedByteIndex] ^= 0x10;
+			Assertions.assertThrows(AEADBadTagException.class, () -> {
+				sivWithTamperedKey.decrypt(testCase.getCiphertext(), testCase.getAssociatedData());
+			});
+		}
 
-						Assertions.assertThrows(AEADBadTagException.class, () -> {
-							siv.decrypt(ciphertext, testCase.getAssociatedData());
-						});
-					}),
-					DynamicTest.dynamicTest("decrypt fails due to tampered associated data", () -> {
-						byte[][] ad = testCase.getAssociatedData();
+		@DisplayName("decrypt fails due to tampered ciphertext")
+		@ParameterizedTest(name = "{0}")
+		@FieldSource("testCases")
+		public void testDecryptFailsDueToTamperedCiphertext(EncryptionTestCase testCase) {
+			SivEngine siv = new SivEngine(testCase.getKey());
+			byte[] ciphertext = testCase.getCiphertext();
 
-						// Try flipping bits in the associated data elements
-						for (int adIdx = 0; adIdx < ad.length; adIdx++) {
-							// Skip if this ad element is empty
-							if (ad[adIdx].length == 0) {
-								continue;
-							}
+			// Pick some arbitrary key byte to tamper with
+			int tamperedByteIndex = testCase.getTestCaseNumber() % ciphertext.length;
 
-							// Pick some arbitrary byte to tamper with
-							int tamperedByteIndex = testIdx % ad[adIdx].length;
+			// Flip a single bit
+			ciphertext[tamperedByteIndex] ^= 0x10;
 
-							// Flip a single bit
-							ad[adIdx][tamperedByteIndex] ^= 0x04;
+			Assertions.assertThrows(AEADBadTagException.class, () -> {
+				siv.decrypt(ciphertext, testCase.getAssociatedData());
+			});
+		}
 
-							Assertions.assertThrows(AEADBadTagException.class, () -> {
-								siv.decrypt(testCase.getCiphertext(), ad);
-							});
+		@DisplayName("decrypt fails due to tampered associated data")
+		@ParameterizedTest(name = "{0}")
+		@FieldSource("testCases")
+		public void testDecryptFailsDueToTamperedAAD(EncryptionTestCase testCase) {
+			// Skip if there is no AD
+			if (testCase.getAssociatedData().length == 0) {
+				return;
+			}
 
-							// Restore ad to original value
-							ad[adIdx][tamperedByteIndex] ^= 0x04;
-						}
-					}),
-					DynamicTest.dynamicTest("decrypt fails due to prepended associated data", () -> {
-						// Skip if there is no more room for additional AD
-						if (testCase.getAssociatedData().length > 125) {
-							return;
-						}
+			SivEngine siv = new SivEngine(testCase.getKey());
+			byte[][] ad = testCase.getAssociatedData();
 
-						byte[][] ad = testCase.getAssociatedData();
-						byte[][] prependedAd = new byte[ad.length + 1][];
-						prependedAd[0] = new byte[testIdx % 16];
-						System.arraycopy(ad, 0, prependedAd, 1, ad.length);
+			// Try flipping bits in the associated data elements
+			for (int adIdx = 0; adIdx < ad.length; adIdx++) {
+				// Skip if this ad element is empty
+				if (ad[adIdx].length == 0) {
+					continue;
+				}
 
-						Assertions.assertThrows(AEADBadTagException.class, () -> {
-							siv.decrypt(testCase.getCiphertext(), prependedAd);
-						});
-					}),
-					DynamicTest.dynamicTest("decrypt fails due to appended associated data", () -> {
-						// Skip if there is no more room for additional AD
-						if (testCase.getAssociatedData().length > 125) {
-							return;
-						}
+				// Pick some arbitrary byte to tamper with
+				int tamperedByteIndex = testCase.getTestCaseNumber() % ad[adIdx].length;
 
-						byte[][] ad = testCase.getAssociatedData();
-						byte[][] appendedAd = new byte[ad.length + 1][];
-						appendedAd[ad.length] = new byte[testIdx % 16];
-						System.arraycopy(ad, 0, appendedAd, 0, ad.length);
+				// Flip a single bit
+				ad[adIdx][tamperedByteIndex] ^= 0x04;
 
-						Assertions.assertThrows(AEADBadTagException.class, () -> {
-							siv.decrypt(testCase.getCiphertext(), appendedAd);
-						});
-					})
-			));
-		});
+				Assertions.assertThrows(AEADBadTagException.class, () -> {
+					siv.decrypt(testCase.getCiphertext(), ad);
+				});
+
+				// Restore ad to original value
+				ad[adIdx][tamperedByteIndex] ^= 0x04;
+			}
+		}
+
+		@DisplayName("decrypt fails due to prepended associated data")
+		@ParameterizedTest(name = "{0}")
+		@FieldSource("testCases")
+		public void testDecryptFailsDueToPrependedAAD(EncryptionTestCase testCase) {
+			// Skip if there is no more room for additional AD
+			if (testCase.getAssociatedData().length > 125) {
+				return;
+			}
+
+			SivEngine siv = new SivEngine(testCase.getKey());
+
+			byte[][] ad = testCase.getAssociatedData();
+			byte[][] prependedAd = new byte[ad.length + 1][];
+			prependedAd[0] = new byte[testCase.getTestCaseNumber() % 16];
+			System.arraycopy(ad, 0, prependedAd, 1, ad.length);
+
+			Assertions.assertThrows(AEADBadTagException.class, () -> {
+				siv.decrypt(testCase.getCiphertext(), prependedAd);
+			});
+		}
+
+		@DisplayName("decrypt fails due to appended associated data")
+		@ParameterizedTest(name = "{0}")
+		@FieldSource("testCases")
+		public void testDecryptFailsDueToAppendedAAD(EncryptionTestCase testCase) {
+			// Skip if there is no more room for additional AD
+			if (testCase.getAssociatedData().length > 125) {
+				return;
+			}
+
+			SivEngine siv = new SivEngine(testCase.getKey());
+
+			byte[][] ad = testCase.getAssociatedData();
+			byte[][] appendedAd = new byte[ad.length + 1][];
+			appendedAd[ad.length] = new byte[testCase.getTestCaseNumber() % 16];
+			System.arraycopy(ad, 0, appendedAd, 0, ad.length);
+
+			Assertions.assertThrows(AEADBadTagException.class, () -> {
+				siv.decrypt(testCase.getCiphertext(), appendedAd);
+			});
+		}
+
 	}
 
 }
