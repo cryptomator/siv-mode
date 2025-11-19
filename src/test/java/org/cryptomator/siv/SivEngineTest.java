@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.crypto.AEADBadTagException;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.ShortBufferException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,6 +73,18 @@ public class SivEngineTest {
 			SivEngine siv = new SivEngine(key);
 			Assertions.assertThrows(IllegalArgumentException.class, () -> {
 				siv.decrypt(plaintext, new byte[127][0]);
+			});
+		}
+
+		@Test
+		public void testEncryptShortBuffer() {
+			final byte[] key = new byte[32];
+			final byte[] plaintext = new byte[80];
+			final byte[] output = new byte[95]; // need at least 96 bytes for ciphertext
+
+			SivEngine siv = new SivEngine(key);
+			Assertions.assertThrows(ShortBufferException.class, () -> {
+				siv.encrypt(plaintext, output, 0);
 			});
 		}
 	}
