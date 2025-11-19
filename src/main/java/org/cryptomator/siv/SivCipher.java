@@ -54,9 +54,9 @@ public class SivCipher extends CipherSpi {
 	@Override
 	protected int engineGetOutputSize(int inputLen) {
 		if (opmode == Cipher.ENCRYPT_MODE || opmode == Cipher.WRAP_MODE) {
-			return 16 + inputLen;
+			return 16 + inputBuffer.length + inputLen;
 		} else if (opmode == Cipher.DECRYPT_MODE || opmode == Cipher.UNWRAP_MODE) {
-			return inputLen - 16;
+			return inputBuffer.length + inputLen - 16;
 		} else {
 			throw new IllegalStateException("Invalid opmode " + this.opmode);
 		}
@@ -123,7 +123,7 @@ public class SivCipher extends CipherSpi {
 
 	@Override
 	protected byte[] engineDoFinal(byte[] input, int inputOffset, int inputLen) throws IllegalBlockSizeException, BadPaddingException {
-		int outputSize = engineGetOutputSize(inputBuffer.length + inputLen);
+		int outputSize = engineGetOutputSize(inputLen);
 		if (outputSize < 0) {
 			throw new IllegalBlockSizeException("Ciphertext too short (must be at least 16 bytes including SIV tag)");
 		}
@@ -139,7 +139,7 @@ public class SivCipher extends CipherSpi {
 
 	@Override
 	protected int engineDoFinal(byte[] input, int inputOffset, int inputLen, byte[] output, int outputOffset) throws ShortBufferException, IllegalBlockSizeException, BadPaddingException {
-		int outputSize = engineGetOutputSize(inputBuffer.length + inputLen);
+		int outputSize = engineGetOutputSize(inputLen);
 		if (outputSize < 0) {
 			throw new IllegalBlockSizeException("Ciphertext too short (must be at least 16 bytes including SIV tag)");
 		}

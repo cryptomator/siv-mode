@@ -13,6 +13,9 @@ public class Utils {
 
 	// First bit 1, following bits 0.
 	static byte[] pad(byte[] in, int desiredLength) {
+		if (in.length >= desiredLength) {
+			throw new IllegalArgumentException("pad() expects input shorter than desiredLength");
+		}
 		final byte[] result = Arrays.copyOf(in, desiredLength);
 		result[in.length] = (byte) 0x80;
 		return result;

@@ -45,6 +45,7 @@ public class CMac extends MacSpi {
 
 	@Override
 	protected void engineInit(Key key, AlgorithmParameterSpec params) throws InvalidKeyException {
+		engineReset();
 		try {
 			this.cipher = Cipher.getInstance(AES_ECB_NO_PADDING);
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
@@ -63,9 +64,6 @@ public class CMac extends MacSpi {
 		} finally {
 			Arrays.fill(L, (byte) 0);
 		}
-
-		// reset state
-		engineReset();
 	}
 
 	@Override
