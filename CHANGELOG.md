@@ -28,8 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 - old lowlevel API:
-  * `new SivMode().encrypt(ctrKey, macKey, encrypted)`
-  * `new SivMode().decrypt(ctrKey, macKey, ciphertext)`
+   * `new SivMode().encrypt(key, plaintext, associatedData...)`
+   * `new SivMode().encrypt(ctrKey, macKey, plaintext, associatedData...)`
+   * `new SivMode().decrypt(key, ciphertext, associatedData...)`
+   * `new SivMode().decrypt(ctrKey, macKey, ciphertext, associatedData...)`
+  
 
 
 ## [1.6.1](https://github.com/cryptomator/siv-mode/compare/1.6.0...1.6.1)
