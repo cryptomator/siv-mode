@@ -8,11 +8,9 @@
 [![Javadocs](http://www.javadoc.io/badge/org.cryptomator/siv-mode.svg)](http://www.javadoc.io/doc/org.cryptomator/siv-mode)
 
 ## Features
-- No dependencies (required BouncyCastle classes are repackaged)
+- No dependencies
 - Passes official RFC 5297 test vectors
 - Constant time authentication
-- Defaults on AES, but supports any block cipher with a 128-bit block size.
-- Supports any key sizes that the block cipher supports (e.g. 128/192/256-bit keys for AES)
 - Thread-safe
 - [Fast](https://github.com/cryptomator/siv-mode/issues/15)
 - Requires JDK 8+ or Android API Level 24+ (since version 1.4.0)
@@ -48,7 +46,7 @@ public void encryptWithAssociatedData() {
   <dependency>
     <groupId>org.cryptomator</groupId>
     <artifactId>siv-mode</artifactId>
-    <version>1.4.0</version>
+    <version>2.0.0</version>
   </dependency>
 </dependencies>
 ```
@@ -60,8 +58,6 @@ From version 1.3.2 onwards this library is an explicit module with the name `org
 ```java
 requires org.cryptomator.siv;
 ```
-
-Because BouncyCastle classes are shaded, this library only depends on `java.base`.
 
 ## Reproducible Builds
 
