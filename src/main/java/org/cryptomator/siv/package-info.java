@@ -1,8 +1,12 @@
 /**
  * Java implementation of RFC 5297 SIV Authenticated Encryption.
  * <p>
- * Use an instance of the {@link org.cryptomator.siv.SivMode} class to
- * {@link org.cryptomator.siv.SivMode#encrypt(javax.crypto.SecretKey, javax.crypto.SecretKey, byte[], byte[]...) encrypt} or
- * {@link org.cryptomator.siv.SivMode#decrypt(javax.crypto.SecretKey, javax.crypto.SecretKey, byte[], byte[]...) decrypt} data.
+ * Two usage patterns are supported:
+ * <ul>
+ *   <li>Direct API: Use {@link org.cryptomator.siv.SivEngine} for encrypt/decrypt operations</li>
+ *   <li>JCE Provider: Register {@link org.cryptomator.siv.SivProvider} and use standard JCE APIs</li>
+ * </ul>
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc5297">RFC 5297</a>
  */
 package org.cryptomator.siv;

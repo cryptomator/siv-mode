@@ -140,6 +140,9 @@ jobs:
           token: ${{ secrets.CRYPTOBOT_RELEASE_TOKEN }}
           generate_release_notes: true
           body: |-
+            ### Full Changelog
+            See [CHANGELOG.md](https://github.com/cryptomator/siv-mode/blob/develop/CHANGELOG.md).
+            
             ### Maven Coordinates
             ```xml
               <dependency>

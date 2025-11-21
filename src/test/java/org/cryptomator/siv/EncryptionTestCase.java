@@ -50,6 +50,13 @@ public class EncryptionTestCase {
 		return testCaseNumber;
 	}
 
+	public byte[] getKey() {
+		byte[] key = new byte[macKey.length + ctrKey.length];
+		System.arraycopy(macKey, 0, key, 0, macKey.length);
+		System.arraycopy(ctrKey, 0, key, macKey.length, ctrKey.length);
+		return key;
+	}
+
 	public byte[] getCtrKey() {
 		return Arrays.copyOf(ctrKey, ctrKey.length);
 	}
@@ -74,5 +81,10 @@ public class EncryptionTestCase {
 
 	public byte[] getCiphertext() {
 		return Arrays.copyOf(ciphertext, ciphertext.length);
+	}
+
+	@Override
+	public String toString() {
+		return "TestCase #" + testCaseNumber;
 	}
 }

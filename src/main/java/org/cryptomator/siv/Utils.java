@@ -1,0 +1,62 @@
+package org.cryptomator.siv;
+
+import java.util.Arrays;
+
+/**
+ * Utility methods for cryptographic operations.
+ * <p>
+ * Provides bit manipulation and padding operations used in AES-SIV mode.
+ */
+public class Utils {
+
+	private static final byte DOUBLING_CONST = (byte) 0x87;
+
+	// First bit 1, following bits 0.
+	static byte[] pad(byte[] in, int desiredLength) {
+		if (in.length >= desiredLength) {
+			throw new IllegalArgumentException("pad() expects input shorter than desiredLength");
+		}
+		final byte[] result = Arrays.copyOf(in, desiredLength);
+		result[in.length] = (byte) 0x80;
+		return result;
+	}
+
+	static int shiftLeft(byte[] block, byte[] output) {
+		int carry = 0;
+
+		// Left shift by 1 bit
+		for (int i = block.length - 1; i >= 0; i--) {
+			byte b = (byte) (block[i] & 0xff);
+			output[i] = (byte) ((b << 1) | carry);
+			carry = (b & 0x80) >>> 7;
+		}
+
+		return carry;
+	}
+
+	static byte[] dbl(byte[] data) {
+		int carry = shiftLeft(data, data);
+		int xor = 0xff & DOUBLING_CONST;
+
+		/*
+		 * NOTE: This construction is an attempt at a constant-time implementation.
+		 */
+		int mask = (-carry) & 0xff;
+		data[data.length - 1] ^= xor & mask;
+
+		return data;
+	}
+
+	static byte[] xor(byte[] in1, byte[] in2) {
+		return xor(in1, in2, in1);
+	}
+
+	static byte[] xor(byte[] in1, byte[] in2, byte[] out) {
+		assert in1.length <= in2.length : "Length of first input must be <= length of second input.";
+		for (int i = 0; i < in1.length; i++) {
+			out[i] = (byte) (in1[i] ^ in2[i]);
+		}
+		return out;
+	}
+
+}
