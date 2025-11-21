@@ -18,6 +18,8 @@ jobs:
       sha256: ${{ steps.checksums.outputs.sha256 }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # deep fetch for better sonarcloud analysis
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
