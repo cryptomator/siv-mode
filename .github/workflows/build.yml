@@ -84,11 +84,9 @@ jobs:
           server-id: central
           server-username: MAVEN_CENTRAL_USERNAME
           server-password: MAVEN_CENTRAL_PASSWORD
-      - name: Verify project version matches tag
+      - name: Ensure to use tagged version
         if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          PROJECT_VERSION=$(./mvnw help:evaluate "-Dexpression=project.version" -q -DforceStdout)
-          test "$PROJECT_VERSION" = "${GITHUB_REF##*/}"
+        run: ./mvnw versions:set --file ./pom.xml -DnewVersion=${GITHUB_REF##*/}
       - name: Verify project version is -SNAPSHOT
         if: startsWith(github.ref, 'refs/tags/') == false
         run: |
@@ -119,11 +117,9 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
           cache: 'maven'
-      - name: Verify project version matches tag
+      - name: Ensure to use tagged version
         if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          PROJECT_VERSION=$(./mvnw help:evaluate "-Dexpression=project.version" -q -DforceStdout)
-          test "$PROJECT_VERSION" = "${GITHUB_REF##*/}"
+        run: ./mvnw versions:set --file ./pom.xml -DnewVersion=${GITHUB_REF##*/}
       - name: Verify project version is -SNAPSHOT
         if: startsWith(github.ref, 'refs/tags/') == false
         run: |
