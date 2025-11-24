@@ -60,13 +60,10 @@ requires org.cryptomator.siv;
 
 ## Reproducible Builds
 
-This is a Maven project that can be built using `mvn install`. However, if you want to build this reproducibly, please make sure:
-
-1. Use the same build environment
-    * The same [JDK as our CI builds](https://github.com/cryptomator/siv-mode/blob/develop/.github/workflows/build.yml#L15-L16)
-    * Ideally the same same arch and OS (x86_64 Linux)
-    * Same locale (en_US) and linebreaks (POSIX)
-2. Use `./mvnw install` instead (or `./mvnw verify` or `./mvnw package -DskipTests`, depending on your intentions)
+Starting with version 1.5.0, you can reproduce the build by:
+1. Ensuring to use the same JDK version as our CI builds (see [build.yml](https://github.com/cryptomator/siv-mode/blob/1.6.1/.github/workflows/build.yml#L16-L17)).
+2. Checkout the tagged version you want to build.
+3. Run `./mvnw clean package artifact:compare -DskipTests`
 
 ## License
 Distributed under the MIT X Consortium license. See the LICENSE file for more info.
