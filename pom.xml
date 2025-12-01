@@ -46,7 +46,7 @@
 		<guava.version>33.5.0-jre</guava.version>
 
 		<!-- maven plugins -->
-		<dependency-check.version>12.1.8</dependency-check.version>
+		<dependency-check.version>12.1.9</dependency-check.version>
 
 		<!-- Property used by surefire to determine jacoco engine -->
 		<surefire.jacoco.args/>
@@ -97,7 +97,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.19.1</version>
+				<version>2.20.1</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -176,7 +176,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.4.2</version>
+				<version>3.5.0</version>
 				<configuration>
 					<archive>
 						<manifestEntries>
@@ -188,7 +188,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.3.1</version>
+				<version>3.4.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
