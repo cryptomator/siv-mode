@@ -33,7 +33,7 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
       - name: Ensure to use tagged version
         if: startsWith(github.ref, 'refs/tags/')
-        run: ./mvnw versions:set --file ./pom.xml -DnewVersion=${GITHUB_REF##*/}
+        run: echo "-Drevision=${GITHUB_REF##*/}" >> .mvn/maven.config
       - name: Build and Test
         run: >
           ./mvnw -B verify --no-transfer-progress
