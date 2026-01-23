@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - simplify build by removing `maven-shade-plugin`
 - update test dependencies
 - update build plugins
+- Pin CI actions ([#92](https://github.com/cryptomator/siv-mode/pull/92))
 
 ### Deprecated
 - old low-level API:

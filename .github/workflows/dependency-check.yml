@@ -11,7 +11,7 @@ on:
 
 jobs:
   check-dependencies:
-    uses: skymatic/workflows/.github/workflows/run-dependency-check.yml@v3
+    uses: skymatic/workflows/.github/workflows/run-dependency-check.yml@2d0c27a7b04c605afe1ca85e37c0e86517defcc9 # v3.0.2
     with:
       java-version: 21
     secrets:
