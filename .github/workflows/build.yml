@@ -12,6 +12,7 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     permissions:
+      contents: read # Required for checkout
       id-token: write # OIDC token for the attestations step
       attestations: write # Required for the attestations step
     outputs:
