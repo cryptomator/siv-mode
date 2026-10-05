@@ -21,3 +21,4 @@ out/
 .idea_modules/
 *.iml
 *.iws
+.vscode/
