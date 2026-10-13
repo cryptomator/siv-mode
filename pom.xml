@@ -39,11 +39,11 @@
 		<project.build.outputTimestamp>2025-03-14T12:02:43Z</project.build.outputTimestamp>
 
 		<!-- test dependencies -->
-		<junit.version>6.0.1</junit.version>
-		<mockito.version>5.21.0</mockito.version>
+		<junit.version>6.0.3</junit.version>
+		<mockito.version>5.23.0</mockito.version>
 		<jmh.version>1.37</jmh.version>
 		<hamcrest.version>3.0</hamcrest.version>
-		<guava.version>33.5.0-jre</guava.version>
+		<guava.version>33.6.0-jre</guava.version>
 
 		<!-- Property used by surefire to determine jacoco engine -->
 		<surefire.jacoco.args />
